@@ -19,7 +19,7 @@
   </header>
 
 
-    @if (mensajeExito) {
+   @if (mensajeExito) {
   <div class="success-message">
     {{ mensajeExito }}
   </div>
@@ -449,6 +449,190 @@
             [disabled]="registroForm.invalid || guardando"
           >
             {{ guardando ? 'Registrando...' : 'Registrar estudiante' }}
+          </button>
+
+        </footer>
+
+      </form>
+
+    </section>
+
+  </div>
+}
+
+
+<!-- MODAL EDITAR ESTUDIANTE -->
+@if (mostrarModalEdicion) {
+  <div class="modal-overlay">
+
+    <section class="modal-container">
+
+      <header class="modal-header">
+        <div>
+          <span class="section-kicker">Administración</span>
+          <h2>Editar estudiante</h2>
+          <p>Modifica los datos del estudiante.</p>
+        </div>
+
+        <button
+          type="button"
+          class="modal-close"
+          (click)="cerrarModalEdicion()"
+          [disabled]="guardandoEdicion"
+        >
+          &times;
+        </button>
+      </header>
+
+      <form (ngSubmit)="actualizarEstudiante()" #edicionForm="ngForm">
+
+        <div class="modal-body">
+
+          <h3>Fotografía</h3>
+
+          @if (fotoActualUrl && !quitarFoto && !nuevaFotoEdicion) {
+            <div class="edit-photo-preview">
+              <img
+                [src]="fotoActualUrl"
+                alt="Fotografía actual del estudiante"
+              >
+            </div>
+          }
+
+          <div class="form-group">
+            <label for="fotoEdicion">Cambiar fotografía</label>
+            <input
+              id="fotoEdicion"
+              type="file"
+              accept="image/*"
+              (change)="seleccionarFotoEdicion($event)"
+            />
+
+            @if (nuevaFotoEdicion) {
+              <small>
+                Nuevo archivo: {{ nuevaFotoEdicion.name }}
+              </small>
+            }
+          </div>
+
+          @if (fotoActualUrl) {
+            <div class="remove-photo-option">
+              <label>
+                <input
+                  type="checkbox"
+                  [(ngModel)]="quitarFoto"
+                  name="quitarFoto"
+                  (ngModelChange)="nuevaFotoEdicion = null"
+                />
+                Quitar fotografía actual
+              </label>
+            </div>
+          }
+
+          <h3>Datos personales</h3>
+
+          <div class="modal-form-grid">
+
+            <div class="form-group">
+              <label for="editNombre">Nombre *</label>
+              <input
+                id="editNombre"
+                name="editNombre"
+                type="text"
+                [(ngModel)]="nuevoEstudiante.nombre"
+                required
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="editApellido">Apellido *</label>
+              <input
+                id="editApellido"
+                name="editApellido"
+                type="text"
+                [(ngModel)]="nuevoEstudiante.apellido"
+                required
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="editDocumento">Documento *</label>
+              <input
+                id="editDocumento"
+                name="editDocumento"
+                type="text"
+                [(ngModel)]="nuevoEstudiante.documento"
+                required
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="editTelefono">Teléfono *</label>
+              <input
+                id="editTelefono"
+                name="editTelefono"
+                type="tel"
+                [(ngModel)]="nuevoEstudiante.telefono"
+                required
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="editCorreo">Correo electrónico *</label>
+              <input
+                id="editCorreo"
+                name="editCorreo"
+                type="email"
+                [(ngModel)]="nuevoEstudiante.correo"
+                required
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="editCinturon">Cinturón *</label>
+              <select
+                id="editCinturon"
+                name="editCinturon"
+                [(ngModel)]="nuevoEstudiante.cinturon"
+                required
+              >
+                <option value="BLANCO">Blanco</option>
+                <option value="AMARILLO">Amarillo</option>
+                <option value="NARANJA">Naranja</option>
+                <option value="VERDE">Verde</option>
+                <option value="AZUL">Azul</option>
+                <option value="MARRON">Marrón</option>
+                <option value="NEGRO">Negro</option>
+              </select>
+            </div>
+
+          </div>
+
+          @if (errorFormulario) {
+            <div class="form-error">
+              {{ errorFormulario }}
+            </div>
+          }
+
+        </div>
+
+        <footer class="modal-footer">
+
+          <button
+            type="button"
+            class="btn-secondary"
+            (click)="cerrarModalEdicion()"
+            [disabled]="guardandoEdicion"
+          >
+            Cancelar
+          </button>
+
+          <button
+            type="submit"
+            class="btn-primary"
+            [disabled]="edicionForm.invalid || guardandoEdicion"
+          >
+            {{ guardandoEdicion ? 'Guardando...' : 'Guardar cambios' }}
           </button>
 
         </footer>

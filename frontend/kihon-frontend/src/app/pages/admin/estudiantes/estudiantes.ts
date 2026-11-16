@@ -1,5 +1,9 @@
-
-import { Component, OnInit, inject } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  inject,
+  ChangeDetectorRef
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -20,6 +24,7 @@ export class Estudiantes implements OnInit {
 
   private readonly estudianteService = inject(EstudianteService);
   private readonly apoderadoService = inject(ApoderadoService);
+  private readonly cdr = inject(ChangeDetectorRef);
 
   estudiantes: EstudianteResponse[] = [];
   estudiantesFiltrados: EstudianteResponse[] = [];
@@ -34,11 +39,22 @@ export class Estudiantes implements OnInit {
 
   paginaActual = 1;
   estudiantesPorPagina = 10;
+
     // MODAL DE REGISTRO
   mostrarModalRegistro = false;
   guardando = false;
+  guardandoEdicion = false;
   errorFormulario = '';
   mensajeExito = '';
+
+  // MODAL DE EDICIÓN
+mostrarModalEdicion = false;
+estudianteEditando: EstudianteResponse | null = null;
+
+fotoActualUrl: string | null = null;
+nuevaFotoEdicion: File | null = null;
+quitarFoto = false;
+
 
   nuevaFoto: File | null = null;
 
@@ -183,7 +199,27 @@ export class Estudiantes implements OnInit {
 }
 
 editarEstudiante(estudiante: EstudianteResponse): void {
-  console.log('Próximamente: editar estudiante', estudiante);
+   this.estudianteEditando = estudiante;
+
+  this.fotoActualUrl = estudiante.fotoUrl;
+  this.nuevaFotoEdicion = null;
+  this.quitarFoto = false;
+  this.errorFormulario = '';
+  this.mensajeExito = '';
+
+  this.nuevoEstudiante = {
+    nombre: estudiante.nombre,
+    apellido: estudiante.apellido,
+    tipoDocumento: estudiante.tipoDocumento || 'DNI',
+    documento: estudiante.documento || '',
+    fechaNacimiento: estudiante.fechaNacimiento || '',
+    telefono: estudiante.telefono || '',
+    correo: estudiante.correo || '',
+    direccion: estudiante.direccion || '',
+    cinturon: estudiante.cinturon || 'BLANCO'
+  };
+
+  this.mostrarModalEdicion = true;
 }
 
   cerrarModalRegistro(): void {
@@ -241,4 +277,80 @@ editarEstudiante(estudiante: EstudianteResponse): void {
       }
     });
   }
+
+  cerrarModalEdicion(): void {
+  if (this.guardando) return;
+
+  this.mostrarModalEdicion = false;
+  this.estudianteEditando = null;
+  this.errorFormulario = '';
+}
+
+seleccionarFotoEdicion(event: Event): void {
+  const input = event.target as HTMLInputElement;
+
+  if (input.files && input.files.length > 0) {
+    this.nuevaFotoEdicion = input.files[0];
+    this.quitarFoto = false;
+  }
+}
+
+
+
+actualizarEstudiante(): void {
+  if (!this.estudianteEditando) return;
+
+  this.guardandoEdicion = true;
+  this.errorFormulario = '';
+
+  const id = this.estudianteEditando.id;
+  const datos = new FormData();
+
+  datos.append('nombre', this.nuevoEstudiante.nombre);
+  datos.append('apellido', this.nuevoEstudiante.apellido);
+  datos.append('documento', this.nuevoEstudiante.documento);
+  datos.append('telefono', this.nuevoEstudiante.telefono);
+  datos.append('correo', this.nuevoEstudiante.correo);
+  datos.append('cinturon', this.nuevoEstudiante.cinturon);
+  datos.append('quitarFoto', String(this.quitarFoto));
+
+  if (this.nuevaFotoEdicion) {
+    datos.append('foto', this.nuevaFotoEdicion);
+  }
+
+  this.estudianteService.actualizar(id, datos).subscribe({
+    next: (respuesta) => {
+      this.guardandoEdicion = false;
+      this.mostrarModalEdicion = false;
+      this.estudianteEditando = null;
+
+      this.estudiantes = this.estudiantes.map(estudiante =>
+        estudiante.id === respuesta.id ? respuesta : estudiante
+      );
+
+      this.aplicarFiltros();
+
+      this.mensajeExito = '';
+
+      setTimeout(() => {
+        this.mensajeExito = 'Estudiante actualizado correctamente.';
+        this.cdr.detectChanges();
+      }, 100);
+    },
+
+    error: (err) => {
+      console.error('Error al actualizar estudiante:', err);
+
+      this.errorFormulario =
+        err.error?.message ||
+        'No se pudo actualizar el estudiante. Verifica los datos.';
+
+      this.guardandoEdicion = false;
+      this.cdr.detectChanges();
+    }
+  });
+}
+
+
+
 }
