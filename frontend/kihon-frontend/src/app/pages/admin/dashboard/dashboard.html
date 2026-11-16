@@ -1,0 +1,177 @@
+<section class="dashboard">
+
+    <header class="dashboard__header">
+        <div>
+            <h1>Dashboard</h1>
+            <p>Resumen general del sistema Kihon</p>
+        </div>
+
+        <span class="dashboard__date">
+            {{ formatToday() }}
+        </span>
+    </header>
+
+    @if (isLoading) {
+    <div class="dashboard__loading">
+        Cargando información del dashboard...
+    </div>
+    }
+
+    @if (errorMessage) {
+    <div class="dashboard__alert" role="alert">
+        {{ errorMessage }}
+    </div>
+    }
+
+    <div class="dashboard__stats">
+
+        <article class="stat-card">
+            <div class="stat-card__icon stat-card__icon--red">♟</div>
+            <div>
+                <p>Total de estudiantes</p>
+                <h2>{{ totalStudents }}</h2>
+            </div>
+        </article>
+
+        <article class="stat-card">
+            <div class="stat-card__icon stat-card__icon--green">✓</div>
+            <div>
+                <p>Estudiantes activos</p>
+                <h2>{{ activeStudents }}</h2>
+            </div>
+        </article>
+
+        <article class="stat-card">
+            <div class="stat-card__icon stat-card__icon--yellow">◈</div>
+            <div>
+                <p>Grupos activos</p>
+                <h2>{{ activeGroups }}</h2>
+            </div>
+        </article>
+
+    </div>
+
+    <div class="dashboard__charts">
+
+        <article class="dashboard-card dashboard-card--attendance">
+            <div class="dashboard-card__header">
+                <div>
+                    <h2>Asistencia semanal</h2>
+                    <p>Asistencias registradas por grupo</p>
+                </div>
+            </div>
+
+            <div class="dashboard-card__chart">
+                <canvas #weeklyAttendanceChart></canvas>
+            </div>
+        </article>
+
+        <article class="dashboard-card dashboard-card--belts">
+            <div class="dashboard-card__header">
+                <div>
+                    <h2>Distribución de cinturones</h2>
+                    <p>Estudiantes por nivel</p>
+                </div>
+            </div>
+
+            <div class="dashboard-card__chart">
+                <canvas #beltDistributionChart></canvas>
+            </div>
+        </article>
+
+    </div>
+
+    <div class="dashboard__bottom">
+
+        <article class="dashboard-card">
+            <div class="dashboard-card__header">
+                <div>
+                    <h2>Estado de clases</h2>
+                    <p>Actividad de hoy</p>
+                </div>
+            </div>
+
+            <div class="class-status">
+
+                <div class="class-status__item">
+                    <span class="class-status__label">
+                        Clase actual
+                    </span>
+
+                    @if (currentClass) {
+                    <strong>{{ currentClass.titulo }}</strong>
+                    <span>
+                        {{ formatEventTime(currentClass.horaInicio) }}
+                        - {{ formatEventTime(currentClass.horaFin) }}
+                    </span>
+                    <small>{{ currentClass.lugar || 'Lugar no especificado' }}</small>
+                    } @else {
+                    <strong class="class-status__empty">
+                        No hay clases en curso
+                    </strong>
+                    }
+                </div>
+
+                <div class="class-status__divider"></div>
+
+                <div class="class-status__item">
+                    <span class="class-status__label">
+                        Siguiente clase
+                    </span>
+
+                    @if (nextClass) {
+                    <strong>{{ nextClass.titulo }}</strong>
+                    <span>
+                        {{ formatEventTime(nextClass.horaInicio) }}
+                        - {{ formatEventTime(nextClass.horaFin) }}
+                    </span>
+                    <small>{{ nextClass.lugar || 'Lugar no especificado' }}</small>
+                    } @else {
+                    <strong class="class-status__empty">
+                        No hay más clases programadas
+                    </strong>
+                    }
+                </div>
+
+            </div>
+        </article>
+
+        <article class="dashboard-card">
+            <div class="dashboard-card__header">
+                <div>
+                    <h2>Horario de hoy</h2>
+                    <p>{{ formatToday() }}</p>
+                </div>
+            </div>
+
+            <div class="today-schedule">
+
+                @if (todayEvents.length > 0) {
+                @for (event of todayEvents; track event.id) {
+                <div class="today-schedule__item">
+                    <div class="today-schedule__time">
+                        {{ formatEventTime(event.horaInicio) }}
+                    </div>
+
+                    <div class="today-schedule__details">
+                        <strong>{{ event.titulo }}</strong>
+                        <span>
+                            {{ formatEventTime(event.horaInicio) }}
+                            - {{ formatEventTime(event.horaFin) }}
+                        </span>
+                        <small>{{ event.lugar || 'Lugar no especificado' }}</small>
+                    </div>
+                </div>
+                }
+                } @else {
+                <p class="today-schedule__empty">
+                    No hay clases programadas para hoy.
+                </p>
+                }
+
+            </div>
+        </article>
+
+    </div>
+
+</section>

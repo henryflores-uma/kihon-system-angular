@@ -1,0 +1,36 @@
+<aside class="sidebar" [class.sidebar--open]="isOpen">
+    <div class="sidebar__brand">
+        <img src="/img/logo_dojo.png" alt="Logo Kihon" />
+        <span>KIHON</span>
+    </div>
+
+    <nav class="sidebar__nav" aria-label="Navegación principal">
+        @for (section of sections; track section.title) {
+        <div class="sidebar__section">
+            <button type="button" class="sidebar__section-button"
+                [class.sidebar__section-button--active]="expandedSection === section.title"
+                [attr.aria-expanded]="expandedSection === section.title" (click)="toggleSection(section.title)">
+                <span>{{ section.title }}</span>
+                <span class="sidebar__arrow">
+                    {{ expandedSection === section.title ? '▾' : '▸' }}
+                </span>
+            </button>
+
+            @if (expandedSection === section.title) {
+            <div class="sidebar__submenu">
+                @for (item of section.items; track item.route) {
+                <a class="sidebar__link" [routerLink]="item.route" routerLinkActive="sidebar__link--active"
+                    [routerLinkActiveOptions]="{ exact: true }" (click)="onNavigate()">
+                    {{ item.label }}
+                </a>
+                }
+            </div>
+            }
+        </div>
+        }
+    </nav>
+</aside>
+
+@if (isOpen) {
+<button type="button" class="sidebar__overlay" aria-label="Cerrar menú" (click)="onNavigate()"></button>
+}
