@@ -1,0 +1,61 @@
+<header class="topbar">
+
+    <div class="topbar__left">
+        <button type="button" class="topbar__menu-button" aria-label="Abrir menú de navegación"
+            (click)="toggleSidebar.emit()">
+            ☰
+        </button>
+
+        <div class="topbar__role">
+            {{ displayRole }}
+        </div>
+    </div>
+
+    <div class="topbar__right">
+
+        <div class="topbar__profile">
+
+            <button type="button" class="topbar__profile-button" [attr.aria-expanded]="isProfileMenuOpen"
+                aria-label="Abrir menú de usuario" (click)="toggleProfileMenu()">
+                @if (profile?.foto) {
+                <img class="topbar__avatar-image" [src]="profile!.foto!" [alt]="'Foto de ' + displayName" />
+                } @else {
+                <span class="topbar__avatar">
+                    {{ avatarInitial }}
+                </span>
+                }
+
+                <span class="topbar__user-info">
+                    <strong>{{ displayName }}</strong>
+                    <small>{{ displayRole }}</small>
+                </span>
+
+                <span class="topbar__arrow">
+                    {{ isProfileMenuOpen ? '▴' : '▾' }}
+                </span>
+            </button>
+
+            @if (isProfileMenuOpen) {
+            <div class="topbar__dropdown">
+
+                <div class="topbar__dropdown-header">
+                    <strong>{{ displayName }}</strong>
+                    <small>{{ profile?.correo || currentUser?.username }}</small>
+                </div>
+
+                <a routerLink="/admin/perfil" class="topbar__dropdown-link" (click)="closeProfileMenu()">
+                    Mi perfil
+                </a>
+
+                <button type="button" class="topbar__logout" (click)="logout()">
+                    Cerrar sesión
+                </button>
+
+            </div>
+            }
+
+        </div>
+
+    </div>
+
+</header>
