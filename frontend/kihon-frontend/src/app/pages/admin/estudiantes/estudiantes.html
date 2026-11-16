@@ -1,0 +1,262 @@
+
+<section class="estudiantes-page">
+
+  <!-- ENCABEZADO -->
+  <header class="page-header">
+    <div>
+      <span class="section-kicker">Administración</span>
+      <h1>Gestión de estudiantes</h1>
+      <p>Administra los estudiantes registrados en la academia.</p>
+    </div>
+
+    <button
+      type="button"
+      class="btn-primary"
+      (click)="abrirRegistro()"
+    >
+      + Registrar estudiante
+    </button>
+  </header>
+
+  <!-- BÚSQUEDA Y FILTROS -->
+  <section class="card filters-card">
+
+    <div class="search-group">
+      <label for="studentSearch">Buscar estudiante</label>
+
+      <input
+        id="studentSearch"
+        type="search"
+        placeholder="Buscar por nombre, apellido o documento..."
+        [(ngModel)]="busqueda"
+        (ngModelChange)="aplicarFiltros()"
+      />
+    </div>
+
+    <div class="filters-grid">
+
+      <div class="form-group">
+        <label for="ageFilter">Edad</label>
+
+        <select
+          id="ageFilter"
+          [(ngModel)]="filtroEdad"
+          (ngModelChange)="aplicarFiltros()"
+        >
+          <option value="TODOS">Todas las edades</option>
+          <option value="MENORES">Menores de 18 años</option>
+          <option value="MAYORES">Mayores de 18 años</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="beltFilter">Cinturón</label>
+
+        <select
+          id="beltFilter"
+          [(ngModel)]="filtroCinturon"
+          (ngModelChange)="aplicarFiltros()"
+        >
+          <option value="TODOS">Todos los cinturones</option>
+          <option value="BLANCO">Blanco</option>
+          <option value="AMARILLO">Amarillo</option>
+          <option value="NARANJA">Naranja</option>
+          <option value="VERDE">Verde</option>
+          <option value="AZUL">Azul</option>
+          <option value="MARRON">Marrón</option>
+          <option value="NEGRO">Negro</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="statusFilter">Estado</label>
+
+        <select
+          id="statusFilter"
+          [(ngModel)]="filtroEstado"
+          (ngModelChange)="aplicarFiltros()"
+        >
+          <option value="TODOS">Todos los estados</option>
+          <option value="ACTIVO">Activo</option>
+          <option value="INACTIVO">Inactivo</option>
+        </select>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- LISTA DE ESTUDIANTES -->
+  <section class="card students-card">
+
+    <div class="list-header">
+      <h2>Lista de estudiantes</h2>
+
+      <span>
+        {{ estudiantesFiltrados.length }}
+        {{ estudiantesFiltrados.length === 1 ? 'estudiante' : 'estudiantes' }}
+      </span>
+    </div>
+
+    <!-- CARGANDO -->
+    @if (cargando) {
+      <div class="state-message">
+        <span class="loader"></span>
+        <p>Cargando estudiantes...</p>
+      </div>
+    }
+
+    <!-- ERROR -->
+    @else if (error) {
+      <div class="state-message error-message">
+        <p>{{ error }}</p>
+
+        <button type="button" class="btn-secondary" (click)="cargarEstudiantes()">
+          Reintentar
+        </button>
+      </div>
+    }
+
+    <!-- TABLA -->
+    @else if (estudiantesPaginados.length > 0) {
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Estudiante</th>
+              <th>Documento</th>
+              <th>Teléfono</th>
+              <th>Edad</th>
+              <th>Cinturón</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            @for (estudiante of estudiantesPaginados; track estudiante.id) {
+              <tr>
+                <td>
+                  <div class="student-info">
+
+                    @if (estudiante.fotoUrl) {
+                      <img
+                        class="student-avatar"
+                        [src]="estudiante.fotoUrl"
+                        [alt]="estudiante.nombre"
+                      />
+                    } @else {
+                      <div class="student-avatar student-avatar--placeholder">
+                        {{ estudiante.nombre.charAt(0) }}
+                      </div>
+                    }
+
+                    <div>
+                      <strong>
+                        {{ estudiante.nombre }} {{ estudiante.apellido }}
+                      </strong>
+
+                      <small>{{ estudiante.correo || 'Sin correo' }}</small>
+                    </div>
+
+                  </div>
+                </td>
+
+                <td>
+                  {{ estudiante.tipoDocumento || '-' }}
+                  {{ estudiante.documento || '-' }}
+                </td>
+
+                <td>{{ estudiante.telefono || '-' }}</td>
+
+                <td>
+                  {{ estudiante.fechaNacimiento
+                    ? calcularEdad(estudiante.fechaNacimiento) + ' años'
+                    : '-' }}
+                </td>
+
+                <td>
+                  <span class="belt-badge"
+                        [class]="'belt-badge belt-' + (estudiante.cinturon || '').toLowerCase()">
+                    {{ estudiante.cinturon || 'Sin cinturón' }}
+                  </span>
+                </td>
+
+                <td>
+                  <span
+                    class="status-badge"
+                    [class.status-active]="estudiante.estado === 'ACTIVO'"
+                    [class.status-inactive]="estudiante.estado === 'INACTIVO'"
+                  >
+                    {{ estudiante.estado }}
+                  </span>
+                </td>
+
+                <td>
+                  <div class="action-buttons">
+                    <button
+                      type="button"
+                      class="action-button"
+                      title="Ver apoderados"
+                      (click)="verApoderados(estudiante)"
+                    >
+                      Apoderados
+                    </button>
+
+                    <button
+                      type="button"
+                      class="action-button"
+                      title="Editar estudiante"
+                      (click)="editarEstudiante(estudiante)"
+                    >
+                      Editar
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <!-- PAGINACIÓN -->
+      <div class="pagination">
+
+        <span>
+          Página {{ paginaActual }} de {{ totalPaginas }}
+        </span>
+
+        <div>
+          <button
+            type="button"
+            class="btn-secondary"
+            [disabled]="paginaActual <= 1"
+            (click)="cambiarPagina(paginaActual - 1)"
+          >
+            Anterior
+          </button>
+
+          <button
+            type="button"
+            class="btn-secondary"
+            [disabled]="paginaActual >= totalPaginas"
+            (click)="cambiarPagina(paginaActual + 1)"
+          >
+            Siguiente
+          </button>
+        </div>
+
+      </div>
+
+    }
+
+    <!-- SIN RESULTADOS -->
+    @else {
+      <div class="state-message">
+        <p>No se encontraron estudiantes.</p>
+      </div>
+    }
+
+  </section>
+
+</section>
