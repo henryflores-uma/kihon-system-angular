@@ -34,6 +34,26 @@ export class Estudiantes implements OnInit {
 
   paginaActual = 1;
   estudiantesPorPagina = 10;
+    // MODAL DE REGISTRO
+  mostrarModalRegistro = false;
+  guardando = false;
+  errorFormulario = '';
+  mensajeExito = '';
+
+  nuevaFoto: File | null = null;
+
+  nuevoEstudiante = {
+    
+    nombre: '',
+    apellido: '',
+    tipoDocumento: 'DNI',
+    documento: '',
+    fechaNacimiento: '',
+    telefono: '',
+    correo: '',
+    direccion: '',
+    cinturon: 'BLANCO'
+  };
 
   ngOnInit(): void {
     this.cargarEstudiantes();
@@ -144,10 +164,81 @@ export class Estudiantes implements OnInit {
   }
 
   abrirRegistro(): void {
-  console.log('Próximamente: registrar estudiante');
+  this.nuevoEstudiante = {
+      nombre: '',
+      apellido: '',
+      tipoDocumento: 'DNI',
+      documento: '',
+      fechaNacimiento: '',
+      telefono: '',
+      correo: '',
+      direccion: '',
+      cinturon: 'BLANCO'
+      
+    };
+    this.mensajeExito = '';
+    this.nuevaFoto = null;
+    this.errorFormulario = '';
+    this.mostrarModalRegistro = true;
 }
 
 editarEstudiante(estudiante: EstudianteResponse): void {
   console.log('Próximamente: editar estudiante', estudiante);
 }
+
+  cerrarModalRegistro(): void {
+    if (this.guardando) return;
+
+    this.mostrarModalRegistro = false;
+    this.errorFormulario = '';
+  }
+
+  seleccionarFoto(event: Event): void {
+    const input = event.target as HTMLInputElement;
+
+    if (input.files && input.files.length > 0) {
+      this.nuevaFoto = input.files[0];
+    }
+  }
+
+  registrarEstudiante(): void {
+    this.guardando = true;
+    this.errorFormulario = '';
+
+    const datos = new FormData();
+
+    datos.append('nombre', this.nuevoEstudiante.nombre);
+    datos.append('apellido', this.nuevoEstudiante.apellido);
+    datos.append('tipoDocumento', this.nuevoEstudiante.tipoDocumento);
+    datos.append('documento', this.nuevoEstudiante.documento);
+    datos.append('fechaNacimiento', this.nuevoEstudiante.fechaNacimiento);
+    datos.append('telefono', this.nuevoEstudiante.telefono);
+    datos.append('correo', this.nuevoEstudiante.correo);
+    datos.append('direccion', this.nuevoEstudiante.direccion);
+    datos.append('cinturon', this.nuevoEstudiante.cinturon);
+
+    if (this.nuevaFoto) {
+      datos.append('foto', this.nuevaFoto);
+    }
+
+    this.estudianteService.crear(datos).subscribe({
+      next: () => {
+        this.guardando = false;
+  this.mostrarModalRegistro = false;
+
+  this.mensajeExito = 'Estudiante registrado correctamente.';
+
+  this.cargarEstudiantes();
+      },
+      error: (err) => {
+        console.error('Error al registrar estudiante:', err);
+
+        this.errorFormulario =
+          err.error?.message ||
+          'No se pudo registrar el estudiante. Verifica los datos.';
+
+        this.guardando = false;
+      }
+    });
+  }
 }
