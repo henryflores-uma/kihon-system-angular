@@ -29,6 +29,13 @@ export class Estudiantes implements OnInit {
   estudiantes: EstudianteResponse[] = [];
   estudiantesFiltrados: EstudianteResponse[] = [];
 
+  // MODAL DE APODERADOS
+mostrarModalApoderados = false;
+cargandoApoderados = false;
+errorApoderados = '';
+relacionesApoderados: EstudianteApoderadoResponse[] = [];
+estudianteSeleccionado: EstudianteResponse | null = null;
+
   cargando = false;
   error = '';
 
@@ -57,6 +64,18 @@ quitarFoto = false;
 
 
   nuevaFoto: File | null = null;
+
+  // DATOS DEL APODERADO
+nuevoApoderado = {
+  nombre: '',
+  apellido: '',
+  tipoDocumento: 'DNI',
+  documento: '',
+  telefono: '',
+  correo: '',
+  direccion: '',
+  parentesco: 'PADRE'
+};
 
   nuevoEstudiante = {
     
@@ -168,16 +187,31 @@ quitarFoto = false;
     this.paginaActual = pagina;
   }
 
-  verApoderados(estudiante: EstudianteResponse): void {
-    this.apoderadoService.listarPorEstudiante(estudiante.id).subscribe({
-      next: (relaciones: EstudianteApoderadoResponse[]) => {
-        console.log('Apoderados del estudiante:', relaciones);
-      },
-      error: (err) => {
-        console.error('Error al consultar apoderados:', err);
-      }
-    });
-  }
+  
+verApoderados(estudiante: EstudianteResponse): void {
+  this.estudianteSeleccionado = estudiante;
+  this.mostrarModalApoderados = true;
+  this.cargandoApoderados = true;
+  this.errorApoderados = '';
+  this.relacionesApoderados = [];
+
+  this.apoderadoService.listarPorEstudiante(estudiante.id).subscribe({
+    next: (relaciones: EstudianteApoderadoResponse[]) => {
+      this.relacionesApoderados = relaciones;
+      this.cargandoApoderados = false;
+      this.cdr.detectChanges();
+    },
+    error: (err) => {
+      console.error('Error al consultar apoderados:', err);
+
+      this.errorApoderados = 'No se pudieron cargar los apoderados.';
+      this.cargandoApoderados = false;
+
+      this.cdr.detectChanges();
+    }
+  });
+}
+
 
   abrirRegistro(): void {
   this.nuevoEstudiante = {
@@ -237,46 +271,115 @@ editarEstudiante(estudiante: EstudianteResponse): void {
     }
   }
 
-  registrarEstudiante(): void {
-    this.guardando = true;
-    this.errorFormulario = '';
+ 
+registrarEstudiante(): void {
+  this.guardando = true;
+  this.errorFormulario = '';
 
-    const datos = new FormData();
+  const datos = new FormData();
 
-    datos.append('nombre', this.nuevoEstudiante.nombre);
-    datos.append('apellido', this.nuevoEstudiante.apellido);
-    datos.append('tipoDocumento', this.nuevoEstudiante.tipoDocumento);
-    datos.append('documento', this.nuevoEstudiante.documento);
-    datos.append('fechaNacimiento', this.nuevoEstudiante.fechaNacimiento);
-    datos.append('telefono', this.nuevoEstudiante.telefono);
-    datos.append('correo', this.nuevoEstudiante.correo);
-    datos.append('direccion', this.nuevoEstudiante.direccion);
-    datos.append('cinturon', this.nuevoEstudiante.cinturon);
+  datos.append('nombre', this.nuevoEstudiante.nombre);
+  datos.append('apellido', this.nuevoEstudiante.apellido);
+  datos.append('tipoDocumento', this.nuevoEstudiante.tipoDocumento);
+  datos.append('documento', this.nuevoEstudiante.documento);
+  datos.append('fechaNacimiento', this.nuevoEstudiante.fechaNacimiento);
+  datos.append('telefono', this.nuevoEstudiante.telefono);
+  datos.append('correo', this.nuevoEstudiante.correo);
+  datos.append('direccion', this.nuevoEstudiante.direccion);
+  datos.append('cinturon', this.nuevoEstudiante.cinturon);
 
-    if (this.nuevaFoto) {
-      datos.append('foto', this.nuevaFoto);
+  if (this.nuevaFoto) {
+    datos.append('foto', this.nuevaFoto);
+  }
+
+  this.estudianteService.crear(datos).subscribe({
+    next: (estudiante) => {
+
+      // Verificar si el estudiante es menor de edad
+      const esMenor = this.calcularEdad(
+        this.nuevoEstudiante.fechaNacimiento
+      ) < 18;
+
+      // Si es mayor de edad, finalizar el registro
+      if (!esMenor) {
+        this.finalizarRegistroEstudiante();
+        return;
+      }
+
+      // Preparar datos del apoderado
+      const datosApoderado = new FormData();
+
+      datosApoderado.append('nombre', this.nuevoApoderado.nombre);
+      datosApoderado.append('apellido', this.nuevoApoderado.apellido);
+      datosApoderado.append('tipoDocumento', this.nuevoApoderado.tipoDocumento);
+      datosApoderado.append('documento', this.nuevoApoderado.documento);
+      datosApoderado.append('telefono', this.nuevoApoderado.telefono);
+      datosApoderado.append('direccion', this.nuevoApoderado.direccion);
+      datosApoderado.append('parentesco', this.nuevoApoderado.parentesco);
+
+      if (this.nuevoApoderado.correo.trim()) {
+        datosApoderado.append('correo', this.nuevoApoderado.correo);
+      }
+
+      // Registrar apoderado asociado al estudiante
+      this.apoderadoService.crear(
+        estudiante.id,
+        datosApoderado
+      ).subscribe({
+        next: () => {
+          this.finalizarRegistroEstudiante();
+        },
+        error: (err) => {
+          console.error('Error al registrar apoderado:', err);
+
+          this.guardando = false;
+          this.mostrarModalRegistro = false;
+          this.cargarEstudiantes();
+
+          this.mensajeExito =
+            'El estudiante se registró, pero no se pudo registrar su apoderado. No vuelvas a registrar al estudiante; revisa el error del apoderado.';
+        }
+      });
+    },
+
+    error: (err) => {
+      console.error('Error al registrar estudiante:', err);
+
+      this.errorFormulario =
+        err.error?.message ||
+        'No se pudo registrar el estudiante. Verifica los datos.';
+
+      this.guardando = false;
     }
+  });
+}
 
-    this.estudianteService.crear(datos).subscribe({
-      next: () => {
-        this.guardando = false;
+
+
+
+private finalizarRegistroEstudiante(): void {
+  this.guardando = false;
+
   this.mostrarModalRegistro = false;
 
-  this.mensajeExito = 'Estudiante registrado correctamente.';
+  this.nuevoApoderado = {
+    nombre: '',
+    apellido: '',
+    tipoDocumento: 'DNI',
+    documento: '',
+    telefono: '',
+    correo: '',
+    direccion: '',
+    parentesco: 'PADRE'
+  };
+
+  this.mensajeExito = 'Estudiante y apoderado registrados correctamente.';
 
   this.cargarEstudiantes();
-      },
-      error: (err) => {
-        console.error('Error al registrar estudiante:', err);
 
-        this.errorFormulario =
-          err.error?.message ||
-          'No se pudo registrar el estudiante. Verifica los datos.';
+  this.cdr.detectChanges();
+}
 
-        this.guardando = false;
-      }
-    });
-  }
 
   cerrarModalEdicion(): void {
   if (this.guardando) return;
@@ -297,11 +400,13 @@ seleccionarFotoEdicion(event: Event): void {
 
 
 
+
 actualizarEstudiante(): void {
   if (!this.estudianteEditando) return;
 
   this.guardandoEdicion = true;
   this.errorFormulario = '';
+  this.mensajeExito = '';
 
   const id = this.estudianteEditando.id;
   const datos = new FormData();
@@ -320,22 +425,22 @@ actualizarEstudiante(): void {
 
   this.estudianteService.actualizar(id, datos).subscribe({
     next: (respuesta) => {
-      this.guardandoEdicion = false;
-      this.mostrarModalEdicion = false;
-      this.estudianteEditando = null;
-
+      // Actualizar el estudiante en la tabla
       this.estudiantes = this.estudiantes.map(estudiante =>
         estudiante.id === respuesta.id ? respuesta : estudiante
       );
 
       this.aplicarFiltros();
 
-      this.mensajeExito = '';
+      // Cerrar el modal
+      this.mostrarModalEdicion = false;
+      this.estudianteEditando = null;
+      this.guardandoEdicion = false;
 
-      setTimeout(() => {
-        this.mensajeExito = 'Estudiante actualizado correctamente.';
-        this.cdr.detectChanges();
-      }, 100);
+      // Mostrar mensaje de éxito
+      this.mensajeExito = 'Estudiante actualizado correctamente.';
+
+      this.cdr.detectChanges();
     },
 
     error: (err) => {
@@ -350,6 +455,34 @@ actualizarEstudiante(): void {
     }
   });
 }
+
+
+cambiarEstadoEstudiante(estudiante: EstudianteResponse): void {
+  const nuevoEstado = estudiante.estado === 'ACTIVO' ? 'INACTIVO' : 'ACTIVO';
+
+  this.estudianteService.cambiarEstado(estudiante.id, nuevoEstado).subscribe({
+    next: (respuesta) => {
+      this.estudiantes = this.estudiantes.map(item =>
+        item.id === respuesta.id ? respuesta : item
+      );
+
+      this.aplicarFiltros();
+
+      this.mensajeExito = `Estudiante ${nuevoEstado.toLowerCase()} correctamente.`;
+
+      this.cdr.detectChanges();
+    },
+    error: (err) => {
+      console.error('Error al cambiar estado:', err);
+
+      this.error = 'No se pudo cambiar el estado del estudiante.';
+      this.cdr.detectChanges();
+    }
+  });
+}
+
+
+
 
 
 
