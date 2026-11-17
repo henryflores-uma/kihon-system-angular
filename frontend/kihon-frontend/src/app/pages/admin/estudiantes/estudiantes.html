@@ -1,0 +1,645 @@
+
+<section class="estudiantes-page">
+
+  <!-- ENCABEZADO -->
+  <header class="page-header">
+    <div>
+      <span class="section-kicker">Administración</span>
+      <h1>Gestión de estudiantes</h1>
+      <p>Administra los estudiantes registrados en la academia.</p>
+    </div>
+
+    <button
+      type="button"
+      class="btn-primary"
+      (click)="abrirRegistro()"
+    >
+      + Registrar estudiante
+    </button>
+  </header>
+
+
+   @if (mensajeExito) {
+  <div class="success-message">
+    {{ mensajeExito }}
+  </div>
+}
+  <!-- BÚSQUEDA Y FILTROS -->
+  <section class="card filters-card">
+
+    <div class="search-group">
+      <label for="studentSearch">Buscar estudiante</label>
+
+      <input
+        id="studentSearch"
+        type="search"
+        placeholder="Buscar por nombre, apellido o documento..."
+        [(ngModel)]="busqueda"
+        (ngModelChange)="aplicarFiltros()"
+      />
+    </div>
+
+    <div class="filters-grid">
+
+      <div class="form-group">
+        <label for="ageFilter">Edad</label>
+
+        <select
+          id="ageFilter"
+          [(ngModel)]="filtroEdad"
+          (ngModelChange)="aplicarFiltros()"
+        >
+          <option value="TODOS">Todas las edades</option>
+          <option value="MENORES">Menores de 18 años</option>
+          <option value="MAYORES">Mayores de 18 años</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="beltFilter">Cinturón</label>
+
+        <select
+          id="beltFilter"
+          [(ngModel)]="filtroCinturon"
+          (ngModelChange)="aplicarFiltros()"
+        >
+          <option value="TODOS">Todos los cinturones</option>
+          <option value="BLANCO">Blanco</option>
+          <option value="AMARILLO">Amarillo</option>
+          <option value="NARANJA">Naranja</option>
+          <option value="VERDE">Verde</option>
+          <option value="AZUL">Azul</option>
+          <option value="MARRON">Marrón</option>
+          <option value="NEGRO">Negro</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="statusFilter">Estado</label>
+
+        <select
+          id="statusFilter"
+          [(ngModel)]="filtroEstado"
+          (ngModelChange)="aplicarFiltros()"
+        >
+          <option value="TODOS">Todos los estados</option>
+          <option value="ACTIVO">Activo</option>
+          <option value="INACTIVO">Inactivo</option>
+        </select>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- LISTA DE ESTUDIANTES -->
+  <section class="card students-card">
+
+    <div class="list-header">
+      <h2>Lista de estudiantes</h2>
+
+      <span>
+        {{ estudiantesFiltrados.length }}
+        {{ estudiantesFiltrados.length === 1 ? 'estudiante' : 'estudiantes' }}
+      </span>
+    </div>
+
+    <!-- CARGANDO -->
+    @if (cargando) {
+      <div class="state-message">
+        <span class="loader"></span>
+        <p>Cargando estudiantes...</p>
+      </div>
+    }
+
+    <!-- ERROR -->
+    @else if (error) {
+      <div class="state-message error-message">
+        <p>{{ error }}</p>
+
+        <button type="button" class="btn-secondary" (click)="cargarEstudiantes()">
+          Reintentar
+        </button>
+      </div>
+    }
+
+    <!-- TABLA -->
+    @else if (estudiantesPaginados.length > 0) {
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Estudiante</th>
+              <th>Documento</th>
+              <th>Teléfono</th>
+              <th>Edad</th>
+              <th>Cinturón</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            @for (estudiante of estudiantesPaginados; track estudiante.id) {
+              <tr>
+                <td>
+                  <div class="student-info">
+
+                    @if (estudiante.fotoUrl) {
+                      <img
+                        class="student-avatar"
+                        [src]="estudiante.fotoUrl"
+                        [alt]="estudiante.nombre"
+                      />
+                    } @else {
+                      <div class="student-avatar student-avatar--placeholder">
+                        {{ estudiante.nombre.charAt(0) }}
+                      </div>
+                    }
+
+                    <div>
+                      <strong>
+                        {{ estudiante.nombre }} {{ estudiante.apellido }}
+                      </strong>
+
+                      <small>{{ estudiante.correo || 'Sin correo' }}</small>
+                    </div>
+
+                  </div>
+                </td>
+
+                <td>
+                  {{ estudiante.tipoDocumento || '-' }}
+                  {{ estudiante.documento || '-' }}
+                </td>
+
+                <td>{{ estudiante.telefono || '-' }}</td>
+
+                <td>
+                  {{ estudiante.fechaNacimiento
+                    ? calcularEdad(estudiante.fechaNacimiento) + ' años'
+                    : '-' }}
+                </td>
+
+                <td>
+                  <span class="belt-badge"
+                        [class]="'belt-badge belt-' + (estudiante.cinturon || '').toLowerCase()">
+                    {{ estudiante.cinturon || 'Sin cinturón' }}
+                  </span>
+                </td>
+
+                <td>
+                  <span
+                    class="status-badge"
+                    [class.status-active]="estudiante.estado === 'ACTIVO'"
+                    [class.status-inactive]="estudiante.estado === 'INACTIVO'"
+                  >
+                    {{ estudiante.estado }}
+                  </span>
+                </td>
+
+                <td>
+                  <div class="action-buttons">
+                    <button
+                      type="button"
+                      class="action-button"
+                      title="Ver apoderados"
+                      (click)="verApoderados(estudiante)"
+                    >
+                      Apoderados
+                    </button>
+
+                    <button
+                      type="button"
+                      class="action-button"
+                      title="Editar estudiante"
+                      (click)="editarEstudiante(estudiante)"
+                    >
+                      Editar
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <!-- PAGINACIÓN -->
+      <div class="pagination">
+
+        <span>
+          Página {{ paginaActual }} de {{ totalPaginas }}
+        </span>
+
+        <div>
+          <button
+            type="button"
+            class="btn-secondary"
+            [disabled]="paginaActual <= 1"
+            (click)="cambiarPagina(paginaActual - 1)"
+          >
+            Anterior
+          </button>
+
+          <button
+            type="button"
+            class="btn-secondary"
+            [disabled]="paginaActual >= totalPaginas"
+            (click)="cambiarPagina(paginaActual + 1)"
+          >
+            Siguiente
+          </button>
+        </div>
+
+      </div>
+
+    }
+
+    <!-- SIN RESULTADOS -->
+    @else {
+      <div class="state-message">
+        <p>No se encontraron estudiantes.</p>
+      </div>
+    }
+
+  </section>
+
+</section>
+
+<!-- MODAL REGISTRAR ESTUDIANTE -->
+@if (mostrarModalRegistro) {
+  <div class="modal-overlay">
+
+    <section class="modal-container">
+
+      <header class="modal-header">
+        <div>
+          <span class="section-kicker">Nuevo registro</span>
+          <h2>Registrar estudiante</h2>
+          <p>Completa los datos del estudiante.</p>
+        </div>
+
+        <button
+          type="button"
+          class="modal-close"
+          (click)="cerrarModalRegistro()"
+          [disabled]="guardando"
+        >
+          &times;
+        </button>
+      </header>
+
+      <form (ngSubmit)="registrarEstudiante()" #registroForm="ngForm">
+
+        <div class="modal-body">
+
+          <!-- FOTO -->
+          <div class="form-group">
+            <label for="foto">Fotografía del estudiante</label>
+            <input
+              id="foto"
+              type="file"
+              accept="image/*"
+              (change)="seleccionarFoto($event)"
+            />
+            @if (nuevaFoto) {
+              <small>Archivo seleccionado: {{ nuevaFoto.name }}</small>
+            }
+          </div>
+
+          <!-- DATOS PERSONALES -->
+          <h3>Datos personales</h3>
+
+          <div class="modal-form-grid">
+
+            <div class="form-group">
+              <label for="nombre">Nombre *</label>
+              <input
+                id="nombre"
+                name="nombre"
+                type="text"
+                [(ngModel)]="nuevoEstudiante.nombre"
+                required
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="apellido">Apellido *</label>
+              <input
+                id="apellido"
+                name="apellido"
+                type="text"
+                [(ngModel)]="nuevoEstudiante.apellido"
+                required
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="tipoDocumento">Tipo de documento *</label>
+              <select
+                id="tipoDocumento"
+                name="tipoDocumento"
+                [(ngModel)]="nuevoEstudiante.tipoDocumento"
+                required
+              >
+                <option value="DNI">DNI</option>
+                <option value="CE">Carné de extranjería</option>
+                <option value="PASAPORTE">Pasaporte</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="documento">Número de documento *</label>
+              <input
+                id="documento"
+                name="documento"
+                type="text"
+                [(ngModel)]="nuevoEstudiante.documento"
+                required
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="fechaNacimiento">Fecha de nacimiento *</label>
+              <input
+                id="fechaNacimiento"
+                name="fechaNacimiento"
+                type="date"
+                [(ngModel)]="nuevoEstudiante.fechaNacimiento"
+                required
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="telefono">Teléfono *</label>
+              <input
+                id="telefono"
+                name="telefono"
+                type="tel"
+                [(ngModel)]="nuevoEstudiante.telefono"
+                required
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="correo">Correo electrónico *</label>
+              <input
+                id="correo"
+                name="correo"
+                type="email"
+                [(ngModel)]="nuevoEstudiante.correo"
+                required
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="cinturon">Cinturón *</label>
+              <select
+                id="cinturon"
+                name="cinturon"
+                [(ngModel)]="nuevoEstudiante.cinturon"
+                required
+              >
+                <option value="BLANCO">Blanco</option>
+                <option value="AMARILLO">Amarillo</option>
+                <option value="NARANJA">Naranja</option>
+                <option value="VERDE">Verde</option>
+                <option value="AZUL">Azul</option>
+                <option value="MARRON">Marrón</option>
+                <option value="NEGRO">Negro</option>
+              </select>
+            </div>
+
+            <div class="form-group full-width">
+              <label for="direccion">Dirección *</label>
+              <input
+                id="direccion"
+                name="direccion"
+                type="text"
+                [(ngModel)]="nuevoEstudiante.direccion"
+                required
+              />
+            </div>
+
+          </div>
+
+          @if (errorFormulario) {
+            <div class="form-error">
+              {{ errorFormulario }}
+            </div>
+          }
+
+        </div>
+
+        <footer class="modal-footer">
+
+          <button
+            type="button"
+            class="btn-secondary"
+            (click)="cerrarModalRegistro()"
+            [disabled]="guardando"
+          >
+            Cancelar
+          </button>
+
+          <button
+            type="submit"
+            class="btn-primary"
+            [disabled]="registroForm.invalid || guardando"
+          >
+            {{ guardando ? 'Registrando...' : 'Registrar estudiante' }}
+          </button>
+
+        </footer>
+
+      </form>
+
+    </section>
+
+  </div>
+}
+
+
+<!-- MODAL EDITAR ESTUDIANTE -->
+@if (mostrarModalEdicion) {
+  <div class="modal-overlay">
+
+    <section class="modal-container">
+
+      <header class="modal-header">
+        <div>
+          <span class="section-kicker">Administración</span>
+          <h2>Editar estudiante</h2>
+          <p>Modifica los datos del estudiante.</p>
+        </div>
+
+        <button
+          type="button"
+          class="modal-close"
+          (click)="cerrarModalEdicion()"
+          [disabled]="guardandoEdicion"
+        >
+          &times;
+        </button>
+      </header>
+
+      <form (ngSubmit)="actualizarEstudiante()" #edicionForm="ngForm">
+
+        <div class="modal-body">
+
+          <h3>Fotografía</h3>
+
+          @if (fotoActualUrl && !quitarFoto && !nuevaFotoEdicion) {
+            <div class="edit-photo-preview">
+              <img
+                [src]="fotoActualUrl"
+                alt="Fotografía actual del estudiante"
+              >
+            </div>
+          }
+
+          <div class="form-group">
+            <label for="fotoEdicion">Cambiar fotografía</label>
+            <input
+              id="fotoEdicion"
+              type="file"
+              accept="image/*"
+              (change)="seleccionarFotoEdicion($event)"
+            />
+
+            @if (nuevaFotoEdicion) {
+              <small>
+                Nuevo archivo: {{ nuevaFotoEdicion.name }}
+              </small>
+            }
+          </div>
+
+          @if (fotoActualUrl) {
+            <div class="remove-photo-option">
+              <label>
+                <input
+                  type="checkbox"
+                  [(ngModel)]="quitarFoto"
+                  name="quitarFoto"
+                  (ngModelChange)="nuevaFotoEdicion = null"
+                />
+                Quitar fotografía actual
+              </label>
+            </div>
+          }
+
+          <h3>Datos personales</h3>
+
+          <div class="modal-form-grid">
+
+            <div class="form-group">
+              <label for="editNombre">Nombre *</label>
+              <input
+                id="editNombre"
+                name="editNombre"
+                type="text"
+                [(ngModel)]="nuevoEstudiante.nombre"
+                required
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="editApellido">Apellido *</label>
+              <input
+                id="editApellido"
+                name="editApellido"
+                type="text"
+                [(ngModel)]="nuevoEstudiante.apellido"
+                required
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="editDocumento">Documento *</label>
+              <input
+                id="editDocumento"
+                name="editDocumento"
+                type="text"
+                [(ngModel)]="nuevoEstudiante.documento"
+                required
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="editTelefono">Teléfono *</label>
+              <input
+                id="editTelefono"
+                name="editTelefono"
+                type="tel"
+                [(ngModel)]="nuevoEstudiante.telefono"
+                required
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="editCorreo">Correo electrónico *</label>
+              <input
+                id="editCorreo"
+                name="editCorreo"
+                type="email"
+                [(ngModel)]="nuevoEstudiante.correo"
+                required
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="editCinturon">Cinturón *</label>
+              <select
+                id="editCinturon"
+                name="editCinturon"
+                [(ngModel)]="nuevoEstudiante.cinturon"
+                required
+              >
+                <option value="BLANCO">Blanco</option>
+                <option value="AMARILLO">Amarillo</option>
+                <option value="NARANJA">Naranja</option>
+                <option value="VERDE">Verde</option>
+                <option value="AZUL">Azul</option>
+                <option value="MARRON">Marrón</option>
+                <option value="NEGRO">Negro</option>
+              </select>
+            </div>
+
+          </div>
+
+          @if (errorFormulario) {
+            <div class="form-error">
+              {{ errorFormulario }}
+            </div>
+          }
+
+        </div>
+
+        <footer class="modal-footer">
+
+          <button
+            type="button"
+            class="btn-secondary"
+            (click)="cerrarModalEdicion()"
+            [disabled]="guardandoEdicion"
+          >
+            Cancelar
+          </button>
+
+          <button
+            type="submit"
+            class="btn-primary"
+            [disabled]="edicionForm.invalid || guardandoEdicion"
+          >
+            {{ guardandoEdicion ? 'Guardando...' : 'Guardar cambios' }}
+          </button>
+
+        </footer>
+
+      </form>
+
+    </section>
+
+  </div>
+}

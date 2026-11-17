@@ -1,83 +1,77 @@
-
 import { Routes } from '@angular/router';
 
 import { Login } from './pages/login/login';
 import { AdminLayout } from './layouts/admin-layout/admin-layout';
 
-import {
-    authGuard,
-    roleGuard
-} from './core/guards/auth-guard';
+import { authGuard, roleGuard } from './core/guards/auth-guard';
 
 export const routes: Routes = [
+  // ==========================================
+  // LOGIN
+  // ==========================================
 
-    // ==========================================
-    // LOGIN
-    // ==========================================
+  {
+    path: 'login',
+    component: Login,
+  },
 
-    {
-        path: 'login',
-        component: Login
+  // ==========================================
+  // ADMINISTRADOR
+  // ==========================================
+
+  {
+    path: 'admin',
+    component: AdminLayout,
+    canActivate: [authGuard, roleGuard],
+    data: {
+      roles: ['ADMIN'],
     },
-
-    // ==========================================
-    // ADMINISTRADOR
-    // ==========================================
-
-    {
+    children: [
+      {
         path: 'admin',
-        component: AdminLayout,
-        canActivate: [authGuard, roleGuard],
-        data: {
-            roles: ['ADMIN']
-        },
-        children: [
+        loadComponent: () => import('./pages/admin/dashboard/dashboard').then((m) => m.Dashboard),
+      },
 
-            {
-                path: 'admin',
-                loadComponent: () =>
-                    import('./pages/admin/dashboard/dashboard')
-                        .then(m => m.Dashboard)
-            },
-
-            {
-                path: '',
-                redirectTo: 'admin',
-                pathMatch: 'full'
-            }
-
-        ]
-    },
-
-    // ==========================================
-    // ACCESO DENEGADO
-    // ==========================================
-
-    {
-        path: 'acceso-denegado',
-        canActivate: [authGuard],
+      {
+        path: 'estudiantes',
         loadComponent: () =>
-            import('./pages/access-denied/access-denied')
-                .then(m => m.AccessDenied)
-    },
+          import('./pages/admin/estudiantes/estudiantes').then((m) => m.Estudiantes),
+      },
 
-    // ==========================================
-    // RUTA PRINCIPAL
-    // ==========================================
-
-    {
+      {
         path: '',
-        redirectTo: 'login',
-        pathMatch: 'full'
-    },
+        redirectTo: 'admin',
+        pathMatch: 'full',
+      },
+    ],
+  },
 
-    // ==========================================
-    // RUTA NO ENCONTRADA
-    // ==========================================
+  // ==========================================
+  // ACCESO DENEGADO
+  // ==========================================
 
-    {
-        path: '**',
-        redirectTo: 'login'
-    }
+  {
+    path: 'acceso-denegado',
+    canActivate: [authGuard],
+    loadComponent: () => import('./pages/access-denied/access-denied').then((m) => m.AccessDenied),
+  },
 
+  // ==========================================
+  // RUTA PRINCIPAL
+  // ==========================================
+
+  {
+    path: '',
+    redirectTo: 'login',
+    pathMatch: 'full',
+  },
+
+  // ==========================================
+  // RUTA NO ENCONTRADA
+  // ==========================================
+
+  {
+    path: '**',
+    redirectTo: 'login',
+  },
 ];
