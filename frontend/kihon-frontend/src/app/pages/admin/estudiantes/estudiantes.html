@@ -437,32 +437,19 @@
 <!-- DATOS DEL APODERADO -->
 <!-- ========================================== -->
 
+<!-- ========================================== -->
+<!-- DATOS DEL APODERADO -->
+<!-- ========================================== -->
 <div
   class="form-group full-width"
   *ngIf="nuevoEstudiante.fechaNacimiento &&
          calcularEdad(nuevoEstudiante.fechaNacimiento) < 18"
 >
   <h3>Datos del apoderado</h3>
-
-@if (apoderadoEditandoId !== null) {
-  <p class="text-muted">
-    Puedes modificar los datos del apoderado registrado.
-  </p>
-} @else if (!mostrarFormularioApoderado) {
-  <div class="apoderado-sin-registro">
-    <p>Este estudiante todavía no tiene un apoderado registrado.</p>
-
-    <button
-      type="button"
-      class="btn-primary"
-      (click)="mostrarFormularioApoderado = true"
-    >
-      + Agregar apoderado
-    </button>
-  </div>
-}
   <p>El estudiante es menor de edad. Ingresa los datos de su apoderado.</p>
 </div>
+
+
 
 <ng-container
   *ngIf="nuevoEstudiante.fechaNacimiento &&
@@ -846,34 +833,9 @@
     </div>
 
   </div>
-
-  @if (apoderadoEditandoId === null) {
-    <button
-      type="button"
-      class="btn-secondary"
-      (click)="mostrarFormularioApoderado = false"
-    >
-      Cancelar registro
-    </button>
-  }
-
 }
 
-@else {
 
-  <div class="apoderado-sin-registro">
-    <p>Este estudiante todavía no tiene un apoderado registrado.</p>
-
-    <button
-      type="button"
-      class="btn-primary"
-      (click)="mostrarFormularioApoderado = true"
-    >
-      + Agregar apoderado
-    </button>
-  </div>
-
-}
 
 
           @if (errorFormulario) {
