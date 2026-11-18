@@ -199,31 +199,42 @@
                 </td>
 
                 <td>
-                  <div class="action-buttons">
-                    <button
-                      type="button"
-                      class="action-button"
-                      title="Ver apoderados"
-                      (click)="verApoderados(estudiante)"
-                    >
-                      Apoderados
-                    </button>
+                 <div class="action-buttons">
+  <button
+    type="button"
+    class="action-button"
+    title="Ver apoderados"
+    (click)="verApoderados(estudiante)"
+  >
+    Apoderados
+  </button>
 
-                    <button
-                      type="button"
-                      class="action-button"
-                      title="Editar estudiante"
-                      (click)="editarEstudiante(estudiante)"
-                    >
-                      Editar
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      </div>
+  <button
+    type="button"
+    class="action-button"
+    title="Editar estudiante"
+    (click)="editarEstudiante(estudiante)"
+  >
+    Editar
+  </button>
+
+  <button
+    type="button"
+    class="action-button"
+    [title]="estudiante.estado === 'ACTIVO' ? 'Desactivar estudiante' : 'Activar estudiante'"
+    (click)="cambiarEstadoEstudiante(estudiante)"
+  >
+    {{ estudiante.estado === 'ACTIVO' ? 'Desactivar' : 'Activar' }}
+    </button>
+</div>
+</td>
+</tr>
+}
+</tbody>
+</table>
+</div>
+
+
 
       <!-- PAGINACIÓN -->
       <div class="pagination">
@@ -422,6 +433,114 @@
               />
             </div>
 
+            <!-- ========================================== -->
+<!-- DATOS DEL APODERADO -->
+<!-- ========================================== -->
+
+<!-- ========================================== -->
+<!-- DATOS DEL APODERADO -->
+<!-- ========================================== -->
+<div
+  class="form-group full-width"
+  *ngIf="nuevoEstudiante.fechaNacimiento &&
+         calcularEdad(nuevoEstudiante.fechaNacimiento) < 18"
+>
+  <h3>Datos del apoderado</h3>
+  <p>El estudiante es menor de edad. Ingresa los datos de su apoderado.</p>
+</div>
+
+
+
+<ng-container
+  *ngIf="nuevoEstudiante.fechaNacimiento &&
+         calcularEdad(nuevoEstudiante.fechaNacimiento) < 18"
+>
+  <div class="form-group">
+    <label>Nombre del apoderado *</label>
+    <input
+      type="text"
+      name="apoderadoNombre"
+      [(ngModel)]="nuevoApoderado.nombre"
+      required
+    />
+  </div>
+
+  <div class="form-group">
+    <label>Apellido del apoderado *</label>
+    <input
+      type="text"
+      name="apoderadoApellido"
+      [(ngModel)]="nuevoApoderado.apellido"
+      required
+    />
+  </div>
+
+  <div class="form-group">
+    <label>Tipo de documento *</label>
+    <select
+      name="apoderadoTipoDocumento"
+      [(ngModel)]="nuevoApoderado.tipoDocumento"
+      required
+    >
+      <option value="DNI">DNI</option>
+      <option value="CARNET DE EXTRANJERÍA">Carnet de extranjería</option>
+    </select>
+  </div>
+
+  <div class="form-group">
+    <label>Número de documento *</label>
+    <input
+      type="text"
+      name="apoderadoDocumento"
+      [(ngModel)]="nuevoApoderado.documento"
+      required
+    />
+  </div>
+
+  <div class="form-group">
+    <label>Teléfono *</label>
+    <input
+      type="tel"
+      name="apoderadoTelefono"
+      [(ngModel)]="nuevoApoderado.telefono"
+      required
+    />
+  </div>
+
+  <div class="form-group">
+    <label>Correo electrónico</label>
+    <input
+      type="email"
+      name="apoderadoCorreo"
+      [(ngModel)]="nuevoApoderado.correo"
+    />
+  </div>
+
+  <div class="form-group">
+    <label>Dirección *</label>
+    <input
+      type="text"
+      name="apoderadoDireccion"
+      [(ngModel)]="nuevoApoderado.direccion"
+      required
+    />
+  </div>
+
+  <div class="form-group">
+    <label>Parentesco *</label>
+    <select
+      name="apoderadoParentesco"
+      [(ngModel)]="nuevoApoderado.parentesco"
+      required
+    >
+      <option value="PADRE">Padre</option>
+      <option value="MADRE">Madre</option>
+      <option value="TUTOR">Tutor</option>
+      <option value="OTRO">Otro</option>
+    </select>
+  </div>
+</ng-container>
+
           </div>
 
           @if (errorFormulario) {
@@ -608,13 +727,124 @@
 
           </div>
 
+          
+
+
+<!-- DATOS DEL APODERADO -->
+<h3>Datos del apoderado</h3>
+
+@if (cargandoApoderados) {
+  <p>Cargando datos del apoderado...</p>
+}
+
+@else if (mostrarFormularioApoderado) {
+
+  <div class="modal-form-grid">
+
+    <div class="form-group">
+      <label for="editApoderadoNombre">Nombre *</label>
+      <input
+        id="editApoderadoNombre"
+        name="editApoderadoNombre"
+        type="text"
+        [(ngModel)]="nuevoApoderado.nombre"
+        required
+      />
+    </div>
+
+    <div class="form-group">
+      <label for="editApoderadoApellido">Apellido *</label>
+      <input
+        id="editApoderadoApellido"
+        name="editApoderadoApellido"
+        type="text"
+        [(ngModel)]="nuevoApoderado.apellido"
+        required
+      />
+    </div>
+
+    <div class="form-group">
+      <label for="editApoderadoTipoDocumento">Tipo de documento</label>
+      <select
+        id="editApoderadoTipoDocumento"
+        name="editApoderadoTipoDocumento"
+        [(ngModel)]="nuevoApoderado.tipoDocumento"
+        required
+      >
+        <option value="DNI">DNI</option>
+        <option value="CARNET DE EXTRANJERÍA">Carnet de extranjería</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label for="editApoderadoDocumento">Documento *</label>
+      <input
+        id="editApoderadoDocumento"
+        name="editApoderadoDocumento"
+        type="text"
+        [(ngModel)]="nuevoApoderado.documento"
+        required
+      />
+    </div>
+
+    <div class="form-group">
+      <label for="editApoderadoTelefono">Teléfono *</label>
+      <input
+        id="editApoderadoTelefono"
+        name="editApoderadoTelefono"
+        type="tel"
+        [(ngModel)]="nuevoApoderado.telefono"
+        required
+      />
+    </div>
+
+    <div class="form-group">
+      <label for="editApoderadoCorreo">Correo electrónico</label>
+      <input
+        id="editApoderadoCorreo"
+        name="editApoderadoCorreo"
+        type="email"
+        [(ngModel)]="nuevoApoderado.correo"
+      />
+    </div>
+
+    <div class="form-group full-width">
+      <label for="editApoderadoDireccion">Dirección</label>
+      <input
+        id="editApoderadoDireccion"
+        name="editApoderadoDireccion"
+        type="text"
+        [(ngModel)]="nuevoApoderado.direccion"
+      />
+    </div>
+
+    <div class="form-group">
+      <label for="editApoderadoParentesco">Parentesco</label>
+      <select
+        id="editApoderadoParentesco"
+        name="editApoderadoParentesco"
+        [(ngModel)]="nuevoApoderado.parentesco"
+      >
+        <option value="PADRE">Padre</option>
+        <option value="MADRE">Madre</option>
+        <option value="TUTOR">Tutor</option>
+        <option value="OTRO">Otro</option>
+      </select>
+    </div>
+
+  </div>
+}
+
+
+
+
           @if (errorFormulario) {
             <div class="form-error">
               {{ errorFormulario }}
             </div>
           }
 
-        </div>
+        </div>  
 
         <footer class="modal-footer">
 
@@ -628,12 +858,18 @@
           </button>
 
           <button
-            type="submit"
-            class="btn-primary"
-            [disabled]="edicionForm.invalid || guardandoEdicion"
-          >
-            {{ guardandoEdicion ? 'Guardando...' : 'Guardar cambios' }}
-          </button>
+  type="submit"
+  class="btn-primary"
+  [disabled]="edicionForm.invalid || guardandoEdicion || registrandoApoderado"
+>
+  {{
+    registrandoApoderado
+      ? 'Registrando apoderado...'
+      : guardandoEdicion
+        ? 'Guardando...'
+        : 'Guardar cambios'
+  }}
+</button>
 
         </footer>
 
@@ -641,5 +877,109 @@
 
     </section>
 
+  </div>
+}
+
+
+@if (mostrarModalApoderados) {
+  <div class="modal-overlay">
+    <div class="modal-container">
+
+      <div class="modal-header">
+        <div>
+          <h2>Apoderados del estudiante</h2>
+
+          @if (estudianteSeleccionado) {
+            <p>
+              {{ estudianteSeleccionado.nombre }}
+              {{ estudianteSeleccionado.apellido }}
+            </p>
+          }
+        </div>
+
+        <button
+          type="button"
+          class="modal-close"
+          (click)="mostrarModalApoderados = false"
+        >
+          &times;
+        </button>
+      </div>
+
+      <div class="modal-body">
+
+        @if (cargandoApoderados) {
+          <p>Cargando apoderados...</p>
+        }
+
+        @else if (errorApoderados) {
+          <p class="error-message">
+            {{ errorApoderados }}
+          </p>
+        }
+
+        @else if (relacionesApoderados.length > 0) {
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th>Nombre</th>
+                  <th>Documento</th>
+                  <th>Teléfono</th>
+                  <th>Correo</th>
+                  <th>Parentesco</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                @for (
+                  relacion of relacionesApoderados;
+                  track relacion.id
+                ) {
+                  <tr>
+                    <td>
+                      {{ relacion.apoderado.persona.nombre }}
+                      {{ relacion.apoderado.persona.apellido }}
+                    </td>
+
+                    <td>
+                      {{ relacion.apoderado.persona.numeroDocumento }}
+                    </td>
+
+                    <td>
+                      {{ relacion.apoderado.persona.telefono }}
+                    </td>
+
+                    <td>
+                      {{ relacion.apoderado.persona.correo }}
+                    </td>
+
+                    <td>
+                      {{ relacion.parentesco }}
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+
+        @else {
+          <p>Este estudiante todavía no tiene apoderados registrados.</p>
+        }
+
+      </div>
+
+      <div class="modal-footer">
+        <button
+          type="button"
+          class="btn-secondary"
+          (click)="mostrarModalApoderados = false"
+        >
+          Cerrar
+        </button>
+      </div>
+
+    </div>
   </div>
 }
