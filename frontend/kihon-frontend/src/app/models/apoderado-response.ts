@@ -5,7 +5,10 @@ export interface ApoderadoResponse {
     id?: number;
     nombre: string;
     apellido: string;
-    tipoDocumento: string | null;
+    tipoDocumento: {
+      id: number;
+      nombre: string;
+    } | null;
     numeroDocumento: string | null;
     telefono: string | null;
     correo: string | null;

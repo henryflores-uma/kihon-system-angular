@@ -443,6 +443,24 @@
          calcularEdad(nuevoEstudiante.fechaNacimiento) < 18"
 >
   <h3>Datos del apoderado</h3>
+
+@if (apoderadoEditandoId !== null) {
+  <p class="text-muted">
+    Puedes modificar los datos del apoderado registrado.
+  </p>
+} @else if (!mostrarFormularioApoderado) {
+  <div class="apoderado-sin-registro">
+    <p>Este estudiante todavía no tiene un apoderado registrado.</p>
+
+    <button
+      type="button"
+      class="btn-primary"
+      (click)="mostrarFormularioApoderado = true"
+    >
+      + Agregar apoderado
+    </button>
+  </div>
+}
   <p>El estudiante es menor de edad. Ingresa los datos de su apoderado.</p>
 </div>
 
@@ -722,13 +740,149 @@
 
           </div>
 
+          
+
+
+<!-- DATOS DEL APODERADO -->
+<h3>Datos del apoderado</h3>
+
+@if (cargandoApoderados) {
+  <p>Cargando datos del apoderado...</p>
+}
+
+@else if (mostrarFormularioApoderado) {
+
+  <div class="modal-form-grid">
+
+    <div class="form-group">
+      <label for="editApoderadoNombre">Nombre *</label>
+      <input
+        id="editApoderadoNombre"
+        name="editApoderadoNombre"
+        type="text"
+        [(ngModel)]="nuevoApoderado.nombre"
+        required
+      />
+    </div>
+
+    <div class="form-group">
+      <label for="editApoderadoApellido">Apellido *</label>
+      <input
+        id="editApoderadoApellido"
+        name="editApoderadoApellido"
+        type="text"
+        [(ngModel)]="nuevoApoderado.apellido"
+        required
+      />
+    </div>
+
+    <div class="form-group">
+      <label for="editApoderadoTipoDocumento">Tipo de documento</label>
+      <select
+        id="editApoderadoTipoDocumento"
+        name="editApoderadoTipoDocumento"
+        [(ngModel)]="nuevoApoderado.tipoDocumento"
+        required
+      >
+        <option value="DNI">DNI</option>
+        <option value="CARNET DE EXTRANJERÍA">Carnet de extranjería</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label for="editApoderadoDocumento">Documento *</label>
+      <input
+        id="editApoderadoDocumento"
+        name="editApoderadoDocumento"
+        type="text"
+        [(ngModel)]="nuevoApoderado.documento"
+        required
+      />
+    </div>
+
+    <div class="form-group">
+      <label for="editApoderadoTelefono">Teléfono *</label>
+      <input
+        id="editApoderadoTelefono"
+        name="editApoderadoTelefono"
+        type="tel"
+        [(ngModel)]="nuevoApoderado.telefono"
+        required
+      />
+    </div>
+
+    <div class="form-group">
+      <label for="editApoderadoCorreo">Correo electrónico</label>
+      <input
+        id="editApoderadoCorreo"
+        name="editApoderadoCorreo"
+        type="email"
+        [(ngModel)]="nuevoApoderado.correo"
+      />
+    </div>
+
+    <div class="form-group full-width">
+      <label for="editApoderadoDireccion">Dirección</label>
+      <input
+        id="editApoderadoDireccion"
+        name="editApoderadoDireccion"
+        type="text"
+        [(ngModel)]="nuevoApoderado.direccion"
+      />
+    </div>
+
+    <div class="form-group">
+      <label for="editApoderadoParentesco">Parentesco</label>
+      <select
+        id="editApoderadoParentesco"
+        name="editApoderadoParentesco"
+        [(ngModel)]="nuevoApoderado.parentesco"
+      >
+        <option value="PADRE">Padre</option>
+        <option value="MADRE">Madre</option>
+        <option value="TUTOR">Tutor</option>
+        <option value="OTRO">Otro</option>
+      </select>
+    </div>
+
+  </div>
+
+  @if (apoderadoEditandoId === null) {
+    <button
+      type="button"
+      class="btn-secondary"
+      (click)="mostrarFormularioApoderado = false"
+    >
+      Cancelar registro
+    </button>
+  }
+
+}
+
+@else {
+
+  <div class="apoderado-sin-registro">
+    <p>Este estudiante todavía no tiene un apoderado registrado.</p>
+
+    <button
+      type="button"
+      class="btn-primary"
+      (click)="mostrarFormularioApoderado = true"
+    >
+      + Agregar apoderado
+    </button>
+  </div>
+
+}
+
+
           @if (errorFormulario) {
             <div class="form-error">
               {{ errorFormulario }}
             </div>
           }
 
-        </div>
+        </div>  
 
         <footer class="modal-footer">
 
@@ -742,12 +896,18 @@
           </button>
 
           <button
-            type="submit"
-            class="btn-primary"
-            [disabled]="edicionForm.invalid || guardandoEdicion"
-          >
-            {{ guardandoEdicion ? 'Guardando...' : 'Guardar cambios' }}
-          </button>
+  type="submit"
+  class="btn-primary"
+  [disabled]="edicionForm.invalid || guardandoEdicion || registrandoApoderado"
+>
+  {{
+    registrandoApoderado
+      ? 'Registrando apoderado...'
+      : guardandoEdicion
+        ? 'Guardando...'
+        : 'Guardar cambios'
+  }}
+</button>
 
         </footer>
 
