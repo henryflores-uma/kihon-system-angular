@@ -1,0 +1,493 @@
+
+<section class="grupos-page">
+
+  <!-- ENCABEZADO -->
+  <header class="page-header">
+    <div>
+      <span class="section-kicker">Administración</span>
+      <h1>Gestión de grupos</h1>
+      <p>Administra los grupos, senseis y horarios de entrenamiento.</p>
+    </div>
+
+    <button
+      type="button"
+      class="btn-primary"
+      (click)="abrirRegistro()"
+    >
+      + Registrar grupo
+    </button>
+  </header>
+
+  <!-- MENSAJES -->
+  @if (mensajeExito) {
+    <div class="success-message">
+      {{ mensajeExito }}
+    </div>
+  }
+
+  @if (error) {
+    <div class="error-banner">
+      {{ error }}
+      <button type="button" (click)="error = ''">Cerrar</button>
+    </div>
+  }
+
+  <!-- FILTROS -->
+  <section class="card filters-card">
+
+    <div class="search-group">
+      <label for="buscarGrupo">Buscar grupo</label>
+      <input
+        id="buscarGrupo"
+        type="search"
+        placeholder="Buscar por nombre, sensei o frecuencia..."
+        [(ngModel)]="busqueda"
+      />
+    </div>
+
+    <div class="filters-grid">
+      <div class="form-group">
+        <label for="filtroEstado">Estado</label>
+        <select id="filtroEstado" [(ngModel)]="filtroEstado">
+          <option value="TODOS">Todos los estados</option>
+          <option value="ACTIVO">Activo</option>
+          <option value="INACTIVO">Inactivo</option>
+        </select>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- LISTADO -->
+  <section class="card groups-card">
+
+    <div class="list-header">
+      <div>
+        <h2>Grupos registrados</h2>
+        <span>
+          {{ gruposFiltrados.length }}
+          {{ gruposFiltrados.length === 1 ? 'grupo' : 'grupos' }}
+        </span>
+      </div>
+
+      <button
+        type="button"
+        class="btn-secondary"
+        (click)="cargarDatos()"
+        [disabled]="cargando"
+      >
+        Actualizar
+      </button>
+    </div>
+
+    @if (cargando) {
+      <div class="state-message">
+        <span class="loader"></span>
+        <p>Cargando grupos...</p>
+      </div>
+    }
+
+    @else if (error && grupos.length === 0) {
+      <div class="state-message error-message">
+        <p>{{ error }}</p>
+        <button
+          type="button"
+          class="btn-secondary"
+          (click)="cargarDatos()"
+        >
+          Reintentar
+        </button>
+      </div>
+    }
+
+    @else if (gruposFiltrados.length > 0) {
+
+      @for (agrupacion of gruposAgrupados; track agrupacion.frecuenciaSemanal) {
+
+        <div class="frequency-section">
+
+          <div class="frequency-header">
+            <div>
+              <span class="frequency-kicker">Frecuencia semanal</span>
+              <h3>{{ agrupacion.frecuenciaNombre }}</h3>
+            </div>
+
+            <span class="frequency-count">
+              {{ agrupacion.grupos.length }}
+              {{ agrupacion.grupos.length === 1 ? 'grupo' : 'grupos' }}
+            </span>
+          </div>
+
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th>Grupo</th>
+                  <th>Sensei</th>
+                  <th>Capacidad</th>
+                  <th>Estudiantes</th>
+                  <th>Cupos disponibles</th>
+                  <th>Horarios</th>
+                  <th>Estado</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                @for (grupo of agrupacion.grupos; track grupo.id) {
+                  <tr>
+
+                    <td>
+                      <div class="group-info">
+                        <strong>{{ grupo.nombre }}</strong>
+                        <small>{{ grupo.descripcion || 'Sin descripción' }}</small>
+                      </div>
+                    </td>
+
+                    <td>{{ grupo.senseiNombre || 'Sin asignar' }}</td>
+
+                    <td>{{ grupo.capacidad }}</td>
+
+                    <td>{{ grupo.estudiantesActivos }}</td>
+
+                    <td>
+                      <span
+                        class="capacity-badge"
+                        [class.capacity-full]="grupo.cuposDisponibles <= 0"
+                      >
+                        {{ grupo.cuposDisponibles }}
+                      </span>
+                    </td>
+
+                    <td>
+                      <div class="schedule-list">
+                        @for (
+                          horario of obtenerHorarios(grupo.id);
+                          track horario.id
+                        ) {
+                          <div class="schedule-item">
+                            <strong>{{ obtenerNombreDia(horario.diaSemana) }}</strong>
+                            <span>
+                              {{ horario.horaInicio.substring(0, 5) }}
+                              -
+                              {{ horario.horaFin.substring(0, 5) }}
+                            </span>
+                          </div>
+                        }
+
+                        @if (obtenerHorarios(grupo.id).length === 0) {
+                          <small>Sin horarios registrados</small>
+                        }
+                      </div>
+                    </td>
+
+                    <td>
+                      <span
+                        class="status-badge"
+                        [class.status-active]="grupo.estado === 'ACTIVO'"
+                        [class.status-inactive]="grupo.estado === 'INACTIVO'"
+                      >
+                        {{ grupo.estado }}
+                      </span>
+                    </td>
+
+                    <td>
+                      <div class="action-buttons">
+
+                        <button
+                          type="button"
+                          class="action-button"
+                          title="Editar grupo"
+                          (click)="editarGrupo(grupo)"
+                        >
+                          Editar
+                        </button>
+
+                        <button
+                          type="button"
+                          class="action-button"
+                          (click)="cambiarEstado(grupo)"
+                        >
+                          {{ grupo.estado === 'ACTIVO' ? 'Desactivar' : 'Activar' }}
+                        </button>
+
+                        <button
+                          type="button"
+                          class="action-button action-delete"
+                          title="Eliminar grupo"
+                          (click)="eliminarGrupo(grupo)"
+                        >
+                          Eliminar
+                        </button>
+
+                      </div>
+                    </td>
+
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+
+        </div>
+      }
+
+    }
+
+    @else {
+      <div class="state-message">
+        <p>No se encontraron grupos registrados.</p>
+        <span>Prueba modificando los filtros o registra un nuevo grupo.</span>
+      </div>
+    }
+
+  </section>
+
+</section>
+
+<!-- ========================================== -->
+<!-- MODAL REGISTRO / EDICIÓN -->
+<!-- ========================================== -->
+
+@if (mostrarModal) {
+
+  <div class="modal-overlay">
+
+    <section class="modal-container">
+
+      <header class="modal-header">
+        <div>
+          <span class="section-kicker">
+            {{ grupoEditando ? 'Administración' : 'Nuevo registro' }}
+          </span>
+
+          <h2>
+            {{ grupoEditando ? 'Editar grupo' : 'Registrar grupo' }}
+          </h2>
+
+          <p>
+            Completa la información y configura los días de entrenamiento.
+          </p>
+        </div>
+
+        <button
+          type="button"
+          class="modal-close"
+          (click)="cerrarModal()"
+          [disabled]="guardando"
+        >
+          &times;
+        </button>
+      </header>
+
+      <form (ngSubmit)="guardarGrupo()" #grupoForm="ngForm">
+
+        <div class="modal-body">
+
+          <!-- DATOS GENERALES -->
+          <h3>Información del grupo</h3>
+
+          <div class="modal-form-grid">
+
+            <div class="form-group">
+              <label for="nombreGrupo">Nombre del grupo *</label>
+              <input
+                id="nombreGrupo"
+                name="nombreGrupo"
+                type="text"
+                [(ngModel)]="nuevoGrupo.nombre"
+                placeholder="Ej. Karate infantil"
+                required
+                maxlength="100"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="capacidadGrupo">Capacidad máxima *</label>
+              <input
+                id="capacidadGrupo"
+                name="capacidadGrupo"
+                type="number"
+                [(ngModel)]="nuevoGrupo.capacidad"
+                min="1"
+                required
+              />
+            </div>
+
+            <div class="form-group full-width">
+              <label for="descripcionGrupo">Descripción *</label>
+              <textarea
+                id="descripcionGrupo"
+                name="descripcionGrupo"
+                [(ngModel)]="nuevoGrupo.descripcion"
+                placeholder="Describe el grupo y su nivel de entrenamiento..."
+                rows="3"
+                required
+              ></textarea>
+            </div>
+
+            <div class="form-group full-width">
+              <label for="senseiGrupo">Sensei responsable</label>
+              <select
+                id="senseiGrupo"
+                name="senseiGrupo"
+                [(ngModel)]="nuevoGrupo.senseiId"
+              >
+                <option [ngValue]="null">Sin asignar</option>
+
+                @for (sensei of senseis; track sensei.id) {
+                  <option [ngValue]="sensei.id">
+                    {{ sensei.nombre }} {{ sensei.apellido }}
+                  </option>
+                }
+              </select>
+            </div>
+
+          </div>
+
+          <!-- HORARIOS -->
+          <div class="schedule-heading">
+            <div>
+              <h3>Días y horarios de entrenamiento</h3>
+              <p>Selecciona los días y establece sus horas.</p>
+            </div>
+
+            <button
+              type="button"
+              class="btn-secondary"
+              (click)="agregarHorario()"
+              [disabled]="guardando || horariosFormulario.length >= 7"
+            >
+              + Agregar día
+            </button>
+          </div>
+
+          <div class="schedule-form-list">
+
+            @for (horario of horariosFormulario; track $index; let i = $index) {
+
+              <div class="schedule-form-item">
+
+                <div class="form-group">
+                  <label [for]="'dia' + i">Día</label>
+                  <select
+                    [id]="'dia' + i"
+                    [name]="'dia' + i"
+                    [(ngModel)]="horario.diaSemana"
+                    required
+                  >
+                    @for (dia of diasSemana; track dia) {
+                      <option
+                        [value]="dia"
+                        [disabled]="horariosFormulario.some(
+                          (otro, indice) =>
+                            indice !== i && otro.diaSemana === dia
+                        )"
+                      >
+                        {{ obtenerNombreDia(dia) }}
+                      </option>
+                    }
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label [for]="'inicio' + i">Hora de inicio</label>
+                  <input
+                    [id]="'inicio' + i"
+                    [name]="'inicio' + i"
+                    type="time"
+                    [(ngModel)]="horario.horaInicio"
+                    required
+                  />
+                </div>
+
+                <div class="form-group">
+                  <label [for]="'fin' + i">Hora de fin</label>
+                  <input
+                    [id]="'fin' + i"
+                    [name]="'fin' + i"
+                    type="time"
+                    [(ngModel)]="horario.horaFin"
+                    required
+                  />
+                </div>
+
+                <button
+                  type="button"
+                  class="remove-schedule"
+                  title="Eliminar horario"
+                  (click)="eliminarHorario(i)"
+                  [disabled]="guardando || horariosFormulario.length <= 1"
+                >
+                  &times;
+                </button>
+
+              </div>
+            }
+
+          </div>
+
+          <!-- FRECUENCIA AUTOMÁTICA -->
+          <div class="frequency-info">
+            <div>
+              <span>Frecuencia semanal calculada</span>
+              <strong>
+                {{ horariosFormulario.length }}
+                {{ horariosFormulario.length === 1 ? 'día' : 'días' }}
+                por semana
+              </strong>
+            </div>
+
+            @if (obtenerFrecuenciaSeleccionada(); as frecuencia) {
+              <span class="frequency-valid">
+                {{ frecuencia.nombre }}
+              </span>
+            } @else {
+              <span class="frequency-invalid">
+                Frecuencia no configurada
+              </span>
+            }
+          </div>
+
+          @if (errorFormulario) {
+            <div class="form-error">
+              {{ errorFormulario }}
+            </div>
+          }
+
+        </div>
+
+        <footer class="modal-footer">
+
+          <button
+            type="button"
+            class="btn-secondary"
+            (click)="cerrarModal()"
+            [disabled]="guardando"
+          >
+            Cancelar
+          </button>
+
+          <button
+            type="submit"
+            class="btn-primary"
+            [disabled]="grupoForm.invalid || guardando"
+          >
+            {{
+              guardando
+                ? 'Guardando...'
+                : grupoEditando
+                  ? 'Guardar cambios'
+                  : 'Registrar grupo'
+            }}
+          </button>
+
+        </footer>
+
+      </form>
+
+    </section>
+
+  </div>
+
+}

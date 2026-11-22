@@ -37,6 +37,11 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./pages/admin/estudiantes/estudiantes').then((m) => m.Estudiantes),
       },
+      {
+        path: 'grupos',
+        loadComponent: () =>
+           import('./pages/admin/grupos/grupos').then((m) => m.Grupos),
+       },
 
       {
         path: '',
