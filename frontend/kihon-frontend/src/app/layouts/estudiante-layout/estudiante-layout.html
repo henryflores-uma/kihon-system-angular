@@ -1,0 +1,22 @@
+<div class="admin-layout">
+
+    <app-sidebar
+        [sections]="studentSections"
+        [flat]="true"
+        [isOpen]="isSidebarOpen"
+        (closeMenu)="closeSidebar()"
+    />
+
+    <div class="admin-layout__main">
+
+        <app-topbar
+            (toggleSidebar)="toggleSidebar()"
+        />
+
+        <main class="admin-layout__content">
+            <router-outlet />
+        </main>
+
+    </div>
+
+</div>

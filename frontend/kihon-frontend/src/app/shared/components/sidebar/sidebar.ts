@@ -1,4 +1,3 @@
-
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 
@@ -19,6 +18,8 @@ export interface SidebarSection {
   styleUrl: './sidebar.scss',
 })
 export class Sidebar {
+
+  @Input() flat = false;
 
   @Input() sections: SidebarSection[] = [
     {

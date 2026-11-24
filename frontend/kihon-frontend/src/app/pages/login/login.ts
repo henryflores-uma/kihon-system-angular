@@ -66,17 +66,17 @@ export class Login {
     this.showPassword = !this.showPassword;
   }
 
-  private redirectByRole(rol: AuthUser['rol']): void {
+ private redirectByRole(rol: AuthUser['rol']): void {
 
-    const routes: Record<AuthUser['rol'], string> = {
-      ADMIN: '/admin/admin',
-      SECRETARIA: '/secretaria/secretaria',
-      SENSEI: '/sensei/sensei',
-      ESTUDIANTE: '/estudiante/perfil'
-    };
+  const routes: Record<AuthUser['rol'], string> = {
+    ADMIN: '/admin/admin',
+    SECRETARIA: '/secretaria/secretaria',
+    SENSEI: '/sensei/sensei',
+    ESTUDIANTE: '/estudiante/dashboard'
+  };
 
-    this.router.navigateByUrl(routes[rol]);
-  }
+  this.router.navigateByUrl(routes[rol]);
+}
 
   private handleLoginError(error: HttpErrorResponse): void {
 
