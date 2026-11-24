@@ -1,0 +1,317 @@
+
+<section class="reportes-page">
+
+  <!-- ENCABEZADO -->
+  <header class="page-header">
+    <div>
+      <span class="section-kicker">Administración</span>
+      <h1>Reportes de asistencia</h1>
+      <p>
+        Consulta, analiza y supervisa la asistencia
+        de los estudiantes de KIHON.
+      </p>
+    </div>
+  </header>
+
+  <!-- GENERAR REPORTE -->
+  <section class="card filters-card">
+
+    <div class="card-heading">
+      <div>
+        <h2>Generar reporte</h2>
+        <p>Selecciona el tipo de consulta y establece los filtros.</p>
+      </div>
+    </div>
+
+    <div class="report-form">
+
+      <!-- TIPO DE REPORTE -->
+      <div class="form-group">
+        <label for="tipoReporte">Tipo de reporte</label>
+
+        <select
+          id="tipoReporte"
+          name="tipoReporte"
+          [(ngModel)]="tipoReporte"
+          (ngModelChange)="cambiarTipoReporte()"
+        >
+          <option value="DIARIO">Reporte diario</option>
+          <option value="SEMANAL">Reporte semanal</option>
+          <option value="MENSUAL">Reporte mensual</option>
+          <option value="ESTUDIANTE">Por estudiante</option>
+          <option value="GRUPO">Por grupo</option>
+        </select>
+      </div>
+
+      <!-- FILTRO DIARIO -->
+      @if (tipoReporte === 'DIARIO') {
+        <div class="form-group">
+          <label for="fecha">Fecha</label>
+
+          <input
+            id="fecha"
+            name="fecha"
+            type="date"
+            [(ngModel)]="fecha"
+          />
+        </div>
+      }
+
+      <!-- FILTRO SEMANAL -->
+      @if (tipoReporte === 'SEMANAL') {
+        <div class="form-group">
+          <label for="fechaInicio">Fecha inicial</label>
+
+          <input
+            id="fechaInicio"
+            name="fechaInicio"
+            type="date"
+            [(ngModel)]="fechaInicio"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="fechaFin">Fecha final</label>
+
+          <input
+            id="fechaFin"
+            name="fechaFin"
+            type="date"
+            [(ngModel)]="fechaFin"
+          />
+        </div>
+      }
+
+      <!-- FILTRO MENSUAL -->
+      @if (tipoReporte === 'MENSUAL') {
+        <div class="form-group">
+          <label for="mes">Mes</label>
+
+          <select
+            id="mes"
+            name="mes"
+            [(ngModel)]="mes"
+          >
+            <option [ngValue]="1">Enero</option>
+            <option [ngValue]="2">Febrero</option>
+            <option [ngValue]="3">Marzo</option>
+            <option [ngValue]="4">Abril</option>
+            <option [ngValue]="5">Mayo</option>
+            <option [ngValue]="6">Junio</option>
+            <option [ngValue]="7">Julio</option>
+            <option [ngValue]="8">Agosto</option>
+            <option [ngValue]="9">Septiembre</option>
+            <option [ngValue]="10">Octubre</option>
+            <option [ngValue]="11">Noviembre</option>
+            <option [ngValue]="12">Diciembre</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="anio">Año</label>
+
+          <input
+            id="anio"
+            name="anio"
+            type="number"
+            min="2000"
+            [(ngModel)]="anio"
+          />
+        </div>
+      }
+
+      <!-- FILTRO ESTUDIANTE -->
+      @if (tipoReporte === 'ESTUDIANTE') {
+        <div class="form-group">
+          <label for="estudianteId">Estudiante</label>
+
+          <select
+            id="estudianteId"
+            name="estudianteId"
+            [(ngModel)]="estudianteId"
+          >
+            <option [ngValue]="null">
+              Seleccionar estudiante
+            </option>
+
+            @for (estudiante of estudiantes; track estudiante.id) {
+              <option [ngValue]="estudiante.id">
+                {{ estudiante.nombre }} {{ estudiante.apellido }}
+              </option>
+            }
+          </select>
+        </div>
+      }
+
+      <!-- FILTRO GRUPO -->
+      @if (tipoReporte === 'GRUPO') {
+        <div class="form-group">
+          <label for="grupoId">Grupo</label>
+
+          <select
+            id="grupoId"
+            name="grupoId"
+            [(ngModel)]="grupoId"
+          >
+            <option [ngValue]="null">
+              Seleccionar grupo
+            </option>
+
+            @for (grupo of grupos; track grupo.id) {
+              <option [ngValue]="grupo.id">
+                {{ grupo.nombre }}
+              </option>
+            }
+          </select>
+        </div>
+      }
+
+    </div>
+
+    @if (errorCatalogos) {
+      <div class="form-error">
+        {{ errorCatalogos }}
+      </div>
+    }
+
+    @if (error) {
+      <div class="form-error">
+        {{ error }}
+      </div>
+    }
+
+    <div class="filter-actions">
+      <button
+        type="button"
+        class="btn-primary"
+        (click)="generarReporte()"
+        [disabled]="cargando || cargandoCatalogos"
+      >
+        {{ cargando ? 'Generando reporte...' : 'Generar reporte' }}
+      </button>
+    </div>
+
+  </section>
+
+  <!-- RESULTADOS -->
+  @if (cargando) {
+    <section class="card state-message">
+      <span class="loader"></span>
+      <p>Generando reporte de asistencia...</p>
+    </section>
+  }
+
+  @else if (reporte) {
+
+    <!-- RESUMEN -->
+    <section class="statistics-grid">
+
+      <article class="stat-card">
+        <span class="stat-label">Total de registros</span>
+        <strong>{{ reporte.total }}</strong>
+      </article>
+
+      <article class="stat-card">
+        <span class="stat-label">Presentes</span>
+        <strong>{{ reporte.presentes }}</strong>
+      </article>
+
+      <article class="stat-card">
+        <span class="stat-label">Tardanzas</span>
+        <strong>{{ reporte.tardanzas }}</strong>
+      </article>
+
+      <article class="stat-card">
+        <span class="stat-label">Ausentes</span>
+        <strong>{{ reporte.ausentes }}</strong>
+      </article>
+
+      <article class="stat-card">
+        <span class="stat-label">Justificados</span>
+        <strong>{{ reporte.justificados }}</strong>
+      </article>
+
+      <article class="stat-card stat-card--highlight">
+        <span class="stat-label">Asistencia</span>
+        <strong>{{ reporte.porcentajeAsistencia | number:'1.1-2' }}%</strong>
+      </article>
+
+    </section>
+
+    <!-- DETALLE -->
+    <section class="card results-card">
+
+      <div class="list-header">
+        <div>
+          <h2>Detalle de asistencias</h2>
+
+          <p>
+            {{ reporte.fechaInicio }}
+            @if (reporte.fechaFin !== reporte.fechaInicio) {
+              — {{ reporte.fechaFin }}
+            }
+          </p>
+        </div>
+
+        <span>
+          {{ reporte.asistencias.length }}
+          registros
+        </span>
+      </div>
+
+      @if (reporte.asistencias.length > 0) {
+
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Estudiante</th>
+                <th>Grupo</th>
+                <th>Fecha</th>
+                <th>Hora</th>
+                <th>Estado</th>
+                <th>Observación</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              @for (
+                asistencia of reporte.asistencias;
+                track asistencia.id
+              ) {
+                <tr>
+                  <td>{{ asistencia.estudianteNombre }}</td>
+                  <td>{{ asistencia.grupoNombre }}</td>
+                  <td>{{ asistencia.fecha }}</td>
+                  <td>{{ asistencia.horaLlegada || '-' }}</td>
+
+                  <td>
+                    <span
+                      class="status-badge"
+                      [class.status-present]="asistencia.estado === 'PRESENTE'"
+                      [class.status-late]="asistencia.estado === 'TARDANZA'"
+                      [class.status-absent]="asistencia.estado === 'AUSENTE'"
+                      [class.status-justified]="asistencia.estado === 'JUSTIFICADO'"
+                    >
+                      {{ obtenerNombreEstado(asistencia.estado) }}
+                    </span>
+                  </td>
+
+                  <td>{{ asistencia.observacion || '-' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+      } @else {
+        <div class="state-message">
+          <p>No hay registros de asistencia para esta consulta.</p>
+        </div>
+      }
+
+    </section>
+
+  }
+
+</section>
