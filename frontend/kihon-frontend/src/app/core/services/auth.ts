@@ -1,12 +1,17 @@
 
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { BehaviorSubject, Observable, tap } from 'rxjs';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
+import { BehaviorSubject, Observable, switchMap, tap } from 'rxjs';
+
 import { environment } from '../../../environments/environment';
 
 export interface AuthUser {
     username: string;
     rol: 'ADMIN' | 'SECRETARIA' | 'SENSEI' | 'ESTUDIANTE';
+}
+
+interface CsrfResponse {
+    token: string;
 }
 
 @Injectable({
@@ -16,7 +21,7 @@ export class AuthService {
 
     private readonly apiUrl = environment.apiUrl;
 
-    private credentials: string | null = null;
+    private csrfToken: string | null = null;
 
     private currentUserSubject =
         new BehaviorSubject<AuthUser | null>(null);
@@ -26,54 +31,96 @@ export class AuthService {
     constructor(private http: HttpClient) { }
 
     // ==========================================
-    // AUTENTICACIÓN
+    // AUTENTICACIÓN CON SESIÓN HTTP
     // ==========================================
 
     login(username: string, password: string): Observable<AuthUser> {
 
-        const credentials = this.encodeCredentials(username, password);
+        // 1. Obtener token CSRF antes del login
+        return this.obtenerCsrf().pipe(
 
-        const headers = new HttpHeaders({
-            Authorization: `Basic ${credentials}`
-        });
+            // 2. Enviar credenciales mediante POST
+            switchMap(token => {
 
-        return this.http.get<AuthUser>(
-            `${this.apiUrl}/auth/me`,
-            { headers }
-        ).pipe(
+                const body = new HttpParams()
+                    .set('username', username)
+                    .set('password', password);
+
+                const headers = new HttpHeaders({
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRF-TOKEN': token
+                });
+
+                return this.http.post<AuthUser>(
+                    `${this.apiUrl}/auth/login`,
+                    body.toString(),
+                    {
+                        headers,
+                        withCredentials: true
+                    }
+                );
+            }),
+
+            // 3. Spring renueva el token CSRF después del login.
+            // Lo solicitamos nuevamente.
+            switchMap(() => this.obtenerCsrf()),
+
+            // 4. Obtener el usuario autenticado mediante la sesión
+            switchMap(() => {
+
+                return this.http.get<AuthUser>(
+                    `${this.apiUrl}/auth/me`,
+                    {
+                        withCredentials: true
+                    }
+                );
+            }),
+
+            // 5. Guardar el usuario autenticado
             tap(user => {
-                this.credentials = credentials;
                 this.currentUserSubject.next(user);
             })
         );
     }
 
     // ==========================================
-    // CODIFICAR CREDENCIALES UTF-8
+    // OBTENER TOKEN CSRF
     // ==========================================
 
-    private encodeCredentials(username: string, password: string): string {
+    obtenerCsrf(): Observable<string> {
 
-        const bytes = new TextEncoder().encode(`${username}:${password}`);
-
-        let binary = '';
-
-        bytes.forEach(byte => {
-            binary += String.fromCharCode(byte);
-        });
-
-        return btoa(binary);
+        return this.http.get<CsrfResponse>(
+            `${this.apiUrl}/auth/csrf`,
+            {
+                withCredentials: true
+            }
+        ).pipe(
+            tap(response => {
+                this.csrfToken = response.token;
+            }),
+            switchMap(response => {
+                return new Observable<string>(subscriber => {
+                    subscriber.next(response.token);
+                    subscriber.complete();
+                });
+            })
+        );
     }
 
     // ==========================================
-    // OBTENER CREDENCIALES
+    // OBTENER TOKEN PARA LAS PETICIONES
+    // ==========================================
+
+    getCsrfToken(): string | null {
+        return this.csrfToken;
+    }
+
+    // ==========================================
+    // COMPATIBILIDAD CON SERVICIOS EXISTENTES
     // ==========================================
 
     getAuthorizationHeader(): string | null {
-
-        return this.credentials
-            ? `Basic ${this.credentials}`
-            : null;
+        return null;
     }
 
     // ==========================================
@@ -81,7 +128,6 @@ export class AuthService {
     // ==========================================
 
     get currentUser(): AuthUser | null {
-
         return this.currentUserSubject.value;
     }
 
@@ -90,9 +136,7 @@ export class AuthService {
     // ==========================================
 
     isAuthenticated(): boolean {
-
-        return this.credentials !== null &&
-            this.currentUser !== null;
+        return this.currentUser !== null;
     }
 
     // ==========================================
@@ -115,12 +159,12 @@ export class AuthService {
     }
 
     // ==========================================
-    // CERRAR SESIÓN
+    // CERRAR SESIÓN LOCAL
     // ==========================================
 
     logout(): void {
 
-        this.credentials = null;
+        this.csrfToken = null;
 
         this.currentUserSubject.next(null);
     }
