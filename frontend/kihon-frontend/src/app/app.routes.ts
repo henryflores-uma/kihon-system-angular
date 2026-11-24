@@ -42,6 +42,11 @@ export const routes: Routes = [
         loadComponent: () =>
            import('./pages/admin/grupos/grupos').then((m) => m.Grupos),
        },
+       {
+        path: 'reportes',
+        loadComponent: () =>
+          import('./pages/admin/reportes/reportes').then((m) => m.Reportes),
+       },
 
       {
         path: '',
