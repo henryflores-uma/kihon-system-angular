@@ -518,53 +518,70 @@ export class Grupos implements OnInit {
   // REGISTRAR GRUPO NUEVO
   // ==========================================
 
-  private registrarGrupoNuevo(datos: GrupoRequest): void {
+ 
 
-    this.grupoService.crear(datos).subscribe({
-      next: grupo => {
+private registrarGrupoNuevo(datos: GrupoRequest): void {
 
-        const solicitudes = this.horariosFormulario.map(horario => {
+  this.grupoService.crear(datos).subscribe({
+    next: grupo => {
 
-          const datosHorario: GrupoHorarioRequest = {
-            grupoId: grupo.id,
-            diaSemana: horario.diaSemana,
-            horaInicio: horario.horaInicio,
-            horaFin: horario.horaFin
+      const solicitudes = this.horariosFormulario.map(horario => {
+
+        const datosHorario: GrupoHorarioRequest = {
+          grupoId: grupo.id,
+          diaSemana: horario.diaSemana,
+          horaInicio: horario.horaInicio,
+          horaFin: horario.horaFin
+        };
+
+        return this.horarioService.crear(datosHorario);
+      });
+
+      forkJoin(solicitudes).subscribe({
+        next: horariosRegistrados => {
+
+          // Actualizar la información local sin realizar nuevos GET
+          this.grupos = [...this.grupos, grupo];
+
+          this.horariosPorGrupo = {
+            ...this.horariosPorGrupo,
+            [grupo.id]: horariosRegistrados
           };
 
-          return this.horarioService.crear(datosHorario);
-        });
+          // Cerrar modal
+          this.mostrarModal = false;
+          this.grupoEditando = null;
+          this.guardando = false;
 
-        forkJoin(solicitudes).subscribe({
-          next: () => {
-            this.finalizarGuardado(
-              'Grupo registrado correctamente.'
-            );
-          },
+          // Mostrar confirmación
+          this.mensajeExito = 'Grupo registrado correctamente.';
+          this.errorFormulario = '';
+        },
 
-          error: err => {
-            this.guardando = false;
+        error: err => {
+          this.guardando = false;
 
-            this.errorFormulario = this.obtenerMensajeError(
-              err,
-              'El grupo se registró, pero ocurrió un error al guardar sus horarios. Revisa el grupo antes de volver a registrarlo.'
-            );
+          this.errorFormulario = this.obtenerMensajeError(
+            err,
+            'El grupo se registró, pero ocurrió un error al guardar sus horarios. Revisa el grupo antes de volver a registrarlo.'
+          );
 
-            this.cargarDatos();
-          }
-        });
-      },
+          this.cargarDatos();
+        }
+      });
+    },
 
-      error: err => {
-        this.guardando = false;
+    error: err => {
+      this.guardando = false;
 
-        this.errorFormulario = this.obtenerMensajeError(
-          err,
-          'No se pudo registrar el grupo.'
-        );
-      }
-    });
-  }
+      this.errorFormulario = this.obtenerMensajeError(
+        err,
+        'No se pudo registrar el grupo.'
+      );
+    }
+  });
+}
+
 
   // ==========================================
   // ACTUALIZAR GRUPO EXISTENTE
