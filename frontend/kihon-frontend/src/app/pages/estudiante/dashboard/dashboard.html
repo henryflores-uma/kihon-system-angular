@@ -1,0 +1,279 @@
+
+<section class="student-dashboard">
+
+  <header class="student-dashboard__header">
+    <div>
+      <span class="student-dashboard__kicker">ACADEMIA DE KARATE SUNKKU SINCHI</span>
+      <h1>Mi dashboard</h1>
+      <p>Consulta tu información y progreso dentro de la academia.</p>
+    </div>
+
+    <span class="student-dashboard__date">
+      {{ formatToday() }}
+    </span>
+  </header>
+
+  @if (isLoading) {
+    <div class="student-dashboard__loading">
+      Cargando información de tu dashboard...
+    </div>
+  }
+
+  @if (errorMessage) {
+    <div class="student-dashboard__alert" role="alert">
+      {{ errorMessage }}
+    </div>
+  }
+
+  @if (!isLoading) {
+
+    <!-- BIENVENIDA -->
+    <article class="welcome-card">
+      <div class="welcome-card__profile">
+
+        @if (resumen?.foto) {
+          <img
+            class="welcome-card__avatar"
+            [src]="resumen!.foto!"
+            [alt]="'Foto de ' + nombreCompleto"
+          />
+        } @else {
+          <div class="welcome-card__avatar welcome-card__avatar--fallback">
+            {{ inicial }}
+          </div>
+        }
+
+        <div class="welcome-card__info">
+          <span>BIENVENIDO/A</span>
+          <h2>¡Hola, {{ nombreCompleto }}!</h2>
+          <p>Continúa entrenando y mejorando cada día.</p>
+        </div>
+      </div>
+
+      <div class="welcome-card__belt">
+        <span>Mi cinturón</span>
+        <strong>{{ resumen?.cinturon || 'No registrado' }}</strong>
+        <small>
+          Estado: {{ resumen?.estado || 'No disponible' }}
+        </small>
+      </div>
+    </article>
+
+    <!-- INDICADORES -->
+    <div class="student-dashboard__stats">
+
+      <article class="stat-card">
+        <div class="stat-card__icon stat-card__icon--blue">♟</div>
+        <div>
+          <p>Mi grupo</p>
+          <h2>{{ grupoPrincipal }}</h2>
+        </div>
+      </article>
+
+      <article class="stat-card">
+        <div class="stat-card__icon stat-card__icon--yellow">◈</div>
+        <div>
+          <p>Mi cinturón</p>
+          <h2>{{ resumen?.cinturon || 'Sin registrar' }}</h2>
+        </div>
+      </article>
+
+      <article class="stat-card">
+        <div class="stat-card__icon stat-card__icon--green">✓</div>
+        <div>
+          <p>Mis asistencias</p>
+          <h2>{{ totalAsistencias }}</h2>
+        </div>
+      </article>
+
+      <article class="stat-card">
+        <div class="stat-card__icon stat-card__icon--red">%</div>
+        <div>
+          <p>Mi progreso</p>
+          <h2>{{ progreso ?? 0 }}%</h2>
+        </div>
+      </article>
+
+    </div>
+
+    <!-- PROGRESO -->
+    <article class="dashboard-card progress-card">
+
+      <div class="dashboard-card__header">
+        <h2>Mi progreso de asistencia</h2>
+        <p>{{ mensajeProgreso }}</p>
+      </div>
+
+      <div class="progress-card__value">
+        {{ progreso ?? 0 }}%
+      </div>
+
+      <div class="progress-card__track">
+        <div
+          class="progress-card__bar"
+          [style.width.%]="progreso ?? 0"
+        ></div>
+      </div>
+
+      <div class="progress-card__details">
+        <div>
+          <strong>{{ presentes }}</strong>
+          <span>Presentes</span>
+        </div>
+
+        <div>
+          <strong>{{ tardanzas }}</strong>
+          <span>Tardanzas</span>
+        </div>
+
+        <div>
+          <strong>{{ ausencias }}</strong>
+          <span>Ausencias</span>
+        </div>
+
+        <div>
+          <strong>{{ justificados }}</strong>
+          <span>Justificados</span>
+        </div>
+      </div>
+
+    </article>
+
+    <!-- GRUPOS -->
+    <section class="student-dashboard__section">
+
+      <div class="section-heading">
+        <div>
+          <h2>Mis grupos</h2>
+          <p>Grupos en los que estás inscrito.</p>
+        </div>
+
+        <span class="section-heading__count">
+          {{ grupos.length }} grupos
+        </span>
+      </div>
+
+      @if (grupos.length > 0) {
+
+        <div class="groups-grid">
+
+          @for (grupo of grupos; track grupo.id) {
+
+            <article class="group-card">
+
+              <div class="group-card__header">
+                <div class="group-card__icon">🥋</div>
+
+                <span class="group-card__status">
+                  {{ grupo.estado }}
+                </span>
+              </div>
+
+              <h3>{{ grupo.nombre }}</h3>
+
+              <p class="group-card__description">
+                {{ grupo.descripcion || 'Sin descripción disponible.' }}
+              </p>
+
+              <div class="group-card__schedule">
+
+                <strong>Horarios de entrenamiento</strong>
+
+                @if (grupo.horarios.length > 0) {
+
+                  @for (horario of grupo.horarios; track $index) {
+                    <div class="group-card__schedule-item">
+                      <span>{{ horario.diaSemana }}</span>
+                      <strong>
+                        {{ formatHora(horario.horaInicio) }}
+                        - {{ formatHora(horario.horaFin) }}
+                      </strong>
+                    </div>
+                  }
+
+                } @else {
+                  <span class="group-card__empty">
+                    No hay horarios registrados.
+                  </span>
+                }
+
+              </div>
+
+            </article>
+
+          }
+
+        </div>
+
+      } @else {
+        <article class="dashboard-card">
+          <p class="dashboard-card__empty">
+            Actualmente no tienes grupos asignados.
+          </p>
+        </article>
+      }
+
+    </section>
+
+    <!-- ACTIVIDAD RECIENTE -->
+    <section class="student-dashboard__section">
+
+      <div class="section-heading">
+        <div>
+          <h2>Actividad reciente</h2>
+          <p>Últimos registros de tus asistencias.</p>
+        </div>
+      </div>
+
+      <article class="dashboard-card">
+
+        @if (asistenciasRecientes.length > 0) {
+
+          <div class="recent-activity">
+
+            @for (asistencia of asistenciasRecientes; track asistencia.id) {
+
+              <div class="recent-activity__item">
+
+                <div class="recent-activity__icon">
+                  ✓
+                </div>
+
+                <div class="recent-activity__info">
+                  <strong>{{ asistencia.grupoNombre || 'Sin grupo' }}</strong>
+
+                  <span>
+                    {{ formatFecha(asistencia.fecha) }}
+                    · {{ formatHora(asistencia.horaLlegada) }}
+                  </span>
+                </div>
+
+                <span
+                  class="attendance-status"
+                  [class.attendance-status--present]="asistencia.estado?.toUpperCase() === 'PRESENTE'"
+                  [class.attendance-status--absent]="asistencia.estado?.toUpperCase() === 'AUSENTE'"
+                  [class.attendance-status--late]="asistencia.estado?.toUpperCase() === 'TARDANZA'"
+                  [class.attendance-status--justified]="asistencia.estado?.toUpperCase() === 'JUSTIFICADO'"
+                >
+                  {{ traducirEstado(asistencia.estado) }}
+                </span>
+
+              </div>
+
+            }
+
+          </div>
+
+        } @else {
+          <p class="dashboard-card__empty">
+            Todavía no tienes registros de asistencia.
+          </p>
+        }
+
+      </article>
+
+    </section>
+
+  }
+
+</section>

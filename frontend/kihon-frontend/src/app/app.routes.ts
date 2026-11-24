@@ -2,8 +2,9 @@ import { Routes } from '@angular/router';
 
 import { Login } from './pages/login/login';
 import { AdminLayout } from './layouts/admin-layout/admin-layout';
-
+import { EstudianteLayout } from './layouts/estudiante-layout/estudiante-layout';
 import { authGuard, roleGuard } from './core/guards/auth-guard';
+
 
 export const routes: Routes = [
   // ==========================================
@@ -50,6 +51,32 @@ export const routes: Routes = [
       },
     ],
   },
+
+   // ==========================================
+// PORTAL DEL ESTUDIANTE
+// ==========================================
+
+{
+  path: 'estudiante',
+  component: EstudianteLayout,
+  canActivate: [authGuard, roleGuard],
+  data: {
+    roles: ['ESTUDIANTE'],
+  },
+  children: [
+    {
+      path: 'dashboard',
+      loadComponent: () =>
+        import('./pages/estudiante/dashboard/dashboard')
+          .then(m => m.EstudianteDashboard),
+    },
+    {
+      path: '',
+      redirectTo: 'dashboard',
+      pathMatch: 'full',
+    },
+  ],
+},
 
   // ==========================================
   // ACCESO DENEGADO
