@@ -1,0 +1,16 @@
+
+.git
+.github
+.vscode
+.idea
+
+.env
+.env.*
+!.env.example
+
+target
+frontend
+node_modules
+dist
+
+*.log
