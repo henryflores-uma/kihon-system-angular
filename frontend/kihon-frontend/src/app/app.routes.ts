@@ -49,6 +49,13 @@ export const routes: Routes = [
           import('./pages/admin/reportes/reportes').then((m) => m.Reportes),
        },
 
+
+       {
+  path: 'usuarios',
+  loadComponent: () =>
+    import('./pages/admin/usuarios/usuarios').then((m) => m.Usuarios),
+},
+
       {
         path: '',
         redirectTo: 'admin',
