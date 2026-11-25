@@ -44,6 +44,31 @@ export class Topbar implements OnInit {
       });
   }
 
+  // ==========================================
+  // RUTA DEL PERFIL SEGÚN EL ROL
+  // ==========================================
+
+  get profileRoute(): string {
+    const role = this.currentUser?.rol;
+
+    switch (role) {
+      case 'ADMIN':
+        return '/admin/perfil';
+
+      case 'ESTUDIANTE':
+        return '/estudiante/perfil';
+
+      case 'SECRETARIA':
+        return '/secretaria/perfil';
+
+      case 'SENSEI':
+        return '/sensei/perfil';
+
+      default:
+        return '/login';
+    }
+  }
+
   get displayName(): string {
     if (this.profile) {
       const fullName = `${this.profile.nombre ?? ''} ${this.profile.apellido ?? ''}`.trim();

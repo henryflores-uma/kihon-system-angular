@@ -43,9 +43,14 @@
                     <small>{{ profile?.correo || currentUser?.username }}</small>
                 </div>
 
-                <a routerLink="/admin/perfil" class="topbar__dropdown-link" (click)="closeProfileMenu()">
-                    Mi perfil
-                </a>
+         
+
+                    <a
+                        [routerLink]="profileRoute"
+                        class="topbar__dropdown-link"
+                        (click)="closeProfileMenu()">
+                        Mi perfil
+                    </a>
 
                 <button type="button" class="topbar__logout" (click)="logout()">
                     Cerrar sesión

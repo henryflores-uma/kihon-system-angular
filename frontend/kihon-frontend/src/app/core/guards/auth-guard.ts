@@ -27,12 +27,22 @@ export const authGuard: CanActivateFn = () => {
 // PROTEGER RUTAS SEGÚN ROL
 // ==========================================
 
+
 export const roleGuard: CanActivateFn = (route) => {
 
   const authService = inject(AuthService);
   const router = inject(Router);
 
   const allowedRoles = route.data['roles'] as string[];
+  const currentUser = authService.currentUser;
+
+  console.log('========== ROLE GUARD ==========');
+  console.log('Usuario actual:', currentUser);
+  console.log('Rol recibido:', currentUser?.rol);
+  console.log('Roles permitidos:', allowedRoles);
+  console.log('¿Autenticado?:', authService.isAuthenticated());
+  console.log('¿Tiene permiso?:', authService.hasRole(allowedRoles));
+  console.log('================================');
 
   if (!authService.isAuthenticated()) {
     return router.createUrlTree(['/login']);

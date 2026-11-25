@@ -1,7 +1,13 @@
 
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
-import { BehaviorSubject, Observable, switchMap, tap } from 'rxjs';
+import {
+    BehaviorSubject,
+    Observable,
+    switchMap,
+    tap,
+    finalize
+} from 'rxjs';
 
 import { environment } from '../../../environments/environment';
 
@@ -162,10 +168,21 @@ export class AuthService {
     // CERRAR SESIÓN LOCAL
     // ==========================================
 
-    logout(): void {
+    
+    logout(): Observable<void> {
 
-        this.csrfToken = null;
+         return this.http.post<void>(
+        `${this.apiUrl}/auth/logout`,
+        {},
+        {
+            withCredentials: true
+        }
+       ).pipe(
+        finalize(() => {
+            this.csrfToken = null;
+            this.currentUserSubject.next(null);
+        })
+       );
+     }
 
-        this.currentUserSubject.next(null);
-    }
 }
