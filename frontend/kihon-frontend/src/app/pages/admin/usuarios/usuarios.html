@@ -1,0 +1,720 @@
+
+<section class="usuarios-page">
+
+  <!-- ENCABEZADO -->
+  <header class="page-header">
+    <div>
+      <span class="section-kicker">Administración</span>
+      <h1>Gestión de Usuarios</h1>
+      <p>Administra las cuentas, permisos y usuarios del sistema KIHON.</p>
+    </div>
+
+        <div class="header-actions">
+
+      <button
+  type="button"
+  class="btn-primary"
+  (click)="abrirRegistroUsuario()"
+>
+  + Registrar usuario
+</button>   
+
+      <button
+        type="button"
+        class="btn-secondary"
+        (click)="cargarUsuarios()"
+        [disabled]="cargando"
+      >
+        ↻ Actualizar
+      </button>
+
+    </div>
+  </header>
+
+  <!-- ESTADÍSTICAS -->
+  <section class="statistics-grid">
+
+    <article class="stat-card">
+      <span class="stat-icon stat-icon--total">♟</span>
+      <div>
+        <p>Total de usuarios</p>
+        <strong>{{ totalUsuarios }}</strong>
+      </div>
+    </article>
+
+    <article class="stat-card">
+      <span class="stat-icon stat-icon--active">✓</span>
+      <div>
+        <p>Usuarios activos</p>
+        <strong>{{ usuariosActivos }}</strong>
+      </div>
+    </article>
+
+    <article class="stat-card">
+      <span class="stat-icon stat-icon--pending">◷</span>
+      <div>
+        <p>Usuarios pendientes</p>
+        <strong>{{ usuariosPendientes }}</strong>
+      </div>
+    </article>
+
+    <article class="stat-card">
+      <span class="stat-icon stat-icon--inactive">−</span>
+      <div>
+        <p>Usuarios inactivos</p>
+        <strong>{{ usuariosInactivos }}</strong>
+      </div>
+    </article>
+
+  </section>
+
+  <!-- LISTADO -->
+  <section class="card users-card">
+
+    <div class="card-heading">
+      <div>
+        <span class="section-kicker">Cuentas del sistema</span>
+        <h2>Usuarios registrados</h2>
+        <p>Consulta y filtra las cuentas registradas en KIHON.</p>
+      </div>
+
+      <span class="results-count">
+        {{ usuariosFiltrados.length }} resultados
+      </span>
+    </div>
+
+    <!-- FILTROS -->
+    <div class="filters-grid">
+
+      <div class="form-group search-group">
+        <label for="busqueda">Buscar usuario</label>
+        <input
+          id="busqueda"
+          type="search"
+          placeholder="Nombre, usuario, documento o correo..."
+          [(ngModel)]="busqueda"
+          (ngModelChange)="aplicarFiltros()"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="filtroRol">Filtrar por rol</label>
+        <select
+          id="filtroRol"
+          [(ngModel)]="filtroRol"
+          (ngModelChange)="aplicarFiltros()"
+        >
+          <option value="TODOS">Todos los roles</option>
+          <option value="ADMIN">Administrador</option>
+          <option value="SECRETARIA">Secretaría</option>
+          <option value="SENSEI">Sensei</option>
+          <option value="ESTUDIANTE">Estudiante</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="filtroEstado">Filtrar por estado</label>
+        <select
+          id="filtroEstado"
+          [(ngModel)]="filtroEstado"
+          (ngModelChange)="aplicarFiltros()"
+        >
+          <option value="TODOS">Todos los estados</option>
+          <option value="ACTIVO">Activo</option>
+          <option value="INACTIVO">Inactivo</option>
+          <option value="PENDIENTE">Pendiente</option>
+        </select>
+      </div>
+
+    </div>
+
+    @if (mensajeAccion) {
+  <div class="success-message">
+    {{ mensajeAccion }}
+  </div>
+}
+
+@if (errorAccion) {
+  <div class="error-message">
+    {{ errorAccion }}
+  </div>
+}
+
+    <!-- CARGANDO -->
+    @if (cargando) {
+      <div class="state-message">
+        <span class="loader"></span>
+        <p>Cargando usuarios...</p>
+      </div>
+    }
+
+    <!-- ERROR -->
+    @else if (error) {
+      <div class="state-message error-state">
+        <h3>No se pudieron cargar los usuarios</h3>
+        <p>{{ error }}</p>
+
+        <button
+          type="button"
+          class="btn-primary"
+          (click)="cargarUsuarios()"
+        >
+          Reintentar
+        </button>
+      </div>
+    }
+
+    <!-- TABLA -->
+    @else if (usuariosFiltrados.length > 0) {
+
+      <div class="table-wrapper">
+
+        <table>
+          <thead>
+            <tr>
+              <th>Foto</th>
+              <th>Usuario</th>
+              <th>Nombre completo</th>
+              <th>Correo</th>
+              <th>Documento</th>
+              <th>Rol</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            @for (usuario of usuariosFiltrados; track usuario.id) {
+              <tr>
+
+                <td>
+                  @if (usuario.foto) {
+                    <img
+                      class="user-avatar"
+                      [src]="usuario.foto"
+                      [alt]="usuario.nombre"
+                    />
+                  } @else {
+                    <div class="user-avatar avatar-placeholder">
+                      {{ usuario.nombre.charAt(0).toUpperCase() }}
+                    </div>
+                  }
+                </td>
+
+                <td>
+                  <strong>{{ usuario.username }}</strong>
+                </td>
+
+                <td>
+                  {{ usuario.nombre }} {{ usuario.apellido }}
+                </td>
+
+                <td>
+                  {{ usuario.correo || '-' }}
+                </td>
+
+                <td>
+                  {{ usuario.numeroDocumento || '-' }}
+                </td>
+
+                <td>
+                  <span class="role-badge">
+                    {{ obtenerNombreRol(usuario.rol) }}
+                  </span>
+                </td>
+
+                <td>
+                  <span
+                    class="status-badge"
+                    [class.status-active]="usuario.estado === 'ACTIVO'"
+                    [class.status-inactive]="usuario.estado === 'INACTIVO'"
+                    [class.status-pending]="usuario.estado === 'PENDIENTE'"
+                  >
+                    {{ obtenerNombreEstado(usuario.estado) }}
+                  </span>
+                </td>
+<td>
+  <button
+    type="button"
+    class="btn-primary"
+    [disabled]="usuariosProcesando.includes(usuario.id)"
+    (click)="cambiarEstadoUsuario(usuario)"
+  >
+    @if (usuariosProcesando.includes(usuario.id)) {
+      Procesando...
+    } @else {
+      {{ usuario.estado === 'ACTIVO' ? 'Desactivar' : 'Activar' }}
+    }
+  </button>
+</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+
+      </div>
+
+    }
+
+    <!-- SIN RESULTADOS -->
+    @else {
+      <div class="state-message empty-state">
+        <div class="empty-icon">♟</div>
+        <h3>No se encontraron usuarios</h3>
+        <p>
+          No existen usuarios que coincidan con los filtros seleccionados.
+        </p>
+      </div>
+    }
+
+  </section>
+
+
+    <!-- ========================================== -->
+  <!-- ESTUDIANTES SIN CUENTA -->
+  <!-- ========================================== -->
+
+  <section class="card students-without-account">
+
+    <div class="card-heading">
+      <div>
+        <span class="section-kicker">Gestión de cuentas</span>
+        <h2>Estudiantes sin cuenta</h2>
+        <p>
+          Estudiantes activos que todavía no tienen acceso
+          al portal de KIHON.
+        </p>
+      </div>
+
+      <span class="results-count">
+        {{ estudiantesSinCuenta.length }} estudiantes
+      </span>
+    </div>
+
+    <!-- CARGANDO -->
+    @if (cargandoEstudiantes) {
+
+      <div class="state-message">
+        <span class="loader"></span>
+        <p>Cargando estudiantes...</p>
+      </div>
+
+    }
+
+    <!-- ERROR -->
+    @else if (errorEstudiantes) {
+
+      <div class="state-message error-state">
+        <h3>No se pudieron cargar los estudiantes</h3>
+        <p>{{ errorEstudiantes }}</p>
+
+        <button
+          type="button"
+          class="btn-primary"
+          (click)="cargarEstudiantesSinCuenta()"
+        >
+          Reintentar
+        </button>
+      </div>
+
+    }
+
+    <!-- TABLA DE ESTUDIANTES -->
+    @else if (estudiantesSinCuenta.length > 0) {
+
+      <div class="table-wrapper">
+
+        <table>
+          <thead>
+            <tr>
+              <th>Foto</th>
+              <th>Estudiante</th>
+              <th>Documento</th>
+              <th>Teléfono</th>
+              <th>Correo</th>
+              <th>Estado</th>
+            </tr>
+          </thead>
+
+          <tbody>
+
+            @for (
+              estudiante of estudiantesSinCuenta;
+              track estudiante.id
+            ) {
+
+              <tr>
+
+                <td>
+                  @if (estudiante.fotoUrl || estudiante.foto) {
+                    <img
+                      class="user-avatar"
+                      [src]="estudiante.fotoUrl || estudiante.foto"
+                      [alt]="estudiante.nombre"
+                    />
+                  } @else {
+                    <div class="user-avatar avatar-placeholder">
+                      {{ estudiante.nombre.charAt(0).toUpperCase() }}
+                    </div>
+                  }
+                </td>
+
+                <td>
+                  <strong>
+                    {{ estudiante.nombre }}
+                    {{ estudiante.apellido }}
+                  </strong>
+                </td>
+
+                <td>
+                  {{ estudiante.documento || '-' }}
+                </td>
+
+                <td>
+                  {{ estudiante.telefono || '-' }}
+                </td>
+
+                <td>
+                  {{ estudiante.correo || '-' }}
+                </td>
+
+                <td>
+                  <span class="status-badge status-active">
+                    Activo
+                  </span>
+                </td>
+
+              </tr>
+
+            }
+
+          </tbody>
+        </table>
+
+      </div>
+
+    }
+
+    <!-- SIN ESTUDIANTES -->
+    @else {
+
+      <div class="state-message empty-state">
+
+        <div class="empty-icon">✓</div>
+
+        <h3>Todos los estudiantes tienen cuenta</h3>
+
+        <p>
+          No hay estudiantes activos pendientes de crear una cuenta.
+        </p>
+
+      </div>
+
+    }
+
+  </section>
+  
+
+
+
+  <!-- ========================================== -->
+  <!-- MODAL REGISTRAR USUARIO NUEVO -->
+  <!-- ========================================== -->
+
+  @if (mostrarModalRegistro) {
+    <div class="modal-overlay">
+      <div
+        class="modal-container"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="tituloRegistroUsuario"
+      >
+
+        <!-- ENCABEZADO -->
+        <header class="modal-header">
+          <div>
+            <span class="section-kicker">Administración KIHON</span>
+            <h2 id="tituloRegistroUsuario">Registrar usuario</h2>
+            <p>Completa los datos personales y de acceso.</p>
+          </div>
+
+          <button
+            type="button"
+            class="modal-close"
+            (click)="cerrarRegistroUsuario()"
+            [disabled]="guardandoRegistro"
+            aria-label="Cerrar"
+          >
+            ×
+          </button>
+        </header>
+
+        <!-- FORMULARIO -->
+        <form
+          class="modal-body"
+          (ngSubmit)="guardarUsuario()"
+          novalidate
+        >
+
+          <!-- DATOS PERSONALES -->
+          <section class="modal-section">
+            <h3>Datos personales</h3>
+
+            <div class="modal-form-grid">
+
+              <!-- NOMBRE -->
+              <div class="form-group">
+                <label for="nombre">Nombre *</label>
+                <input
+                  id="nombre"
+                  name="nombre"
+                  type="text"
+                  [(ngModel)]="nuevoUsuario.nombre"
+                  (ngModelChange)="intentoEnviarRegistro && validarRegistro()"
+                  [class.form-control-error]="intentoEnviarRegistro && erroresRegistro['nombre']"
+                  placeholder="Ingresa el nombre"
+                />
+
+                @if (intentoEnviarRegistro && erroresRegistro['nombre']) {
+                  <small class="field-error">{{ erroresRegistro['nombre'] }}</small>
+                }
+              </div>
+
+              <!-- APELLIDO -->
+              <div class="form-group">
+                <label for="apellido">Apellido *</label>
+                <input
+                  id="apellido"
+                  name="apellido"
+                  type="text"
+                  [(ngModel)]="nuevoUsuario.apellido"
+                  (ngModelChange)="intentoEnviarRegistro && validarRegistro()"
+                  [class.form-control-error]="intentoEnviarRegistro && erroresRegistro['apellido']"
+                  placeholder="Ingresa el apellido"
+                />
+
+                @if (intentoEnviarRegistro && erroresRegistro['apellido']) {
+                  <small class="field-error">{{ erroresRegistro['apellido'] }}</small>
+                }
+              </div>
+
+              <!-- TIPO DOCUMENTO -->
+              <div class="form-group">
+                <label for="tipoDocumento">Tipo de documento *</label>
+                <select
+                  id="tipoDocumento"
+                  name="tipoDocumento"
+                  [(ngModel)]="nuevoUsuario.tipoDocumento"
+                  (ngModelChange)="nuevoUsuario.numeroDocumento = ''; intentoEnviarRegistro && validarRegistro()"
+                  [class.form-control-error]="intentoEnviarRegistro && erroresRegistro['tipoDocumento']"
+                >
+                  <option value="">Seleccionar tipo</option>
+                  <option value="DNI">DNI</option>
+                  <option value="CE">Carné de extranjería</option>
+                  <option value="PASAPORTE">Pasaporte</option>
+                </select>
+
+                @if (intentoEnviarRegistro && erroresRegistro['tipoDocumento']) {
+                  <small class="field-error">{{ erroresRegistro['tipoDocumento'] }}</small>
+                }
+              </div>
+
+              <!-- NUMERO DOCUMENTO -->
+              <div class="form-group">
+                <label for="numeroDocumento">Número de documento *</label>
+                <input
+                  id="numeroDocumento"
+                  name="numeroDocumento"
+                  type="text"
+                  [(ngModel)]="nuevoUsuario.numeroDocumento"
+                  (ngModelChange)="intentoEnviarRegistro && validarRegistro()"
+                  [class.form-control-error]="intentoEnviarRegistro && erroresRegistro['numeroDocumento']"
+                  placeholder="Número de documento"
+                />
+
+                @if (intentoEnviarRegistro && erroresRegistro['numeroDocumento']) {
+                  <small class="field-error">{{ erroresRegistro['numeroDocumento'] }}</small>
+                }
+              </div>
+
+              <!-- TELEFONO -->
+              <div class="form-group">
+                <label for="telefono">Teléfono *</label>
+
+                <div class="phone-wrapper">
+                  <select
+                    id="codigoPais"
+                    name="codigoPais"
+                    [(ngModel)]="codigoPais"
+                    (ngModelChange)="intentoEnviarRegistro && validarRegistro()"
+                  >
+                    <option value="+51">🇵🇪 +51</option>
+                    <option value="+57">🇨🇴 +57</option>
+                    <option value="+56">🇨🇱 +56</option>
+                    <option value="+54">🇦🇷 +54</option>
+                    <option value="+55">🇧🇷 +55</option>
+                  </select>
+
+                  <input
+                    id="telefono"
+                    name="telefono"
+                    type="tel"
+                    [(ngModel)]="nuevoUsuario.telefono"
+                    (ngModelChange)="intentoEnviarRegistro && validarRegistro()"
+                    [class.form-control-error]="intentoEnviarRegistro && erroresRegistro['telefono']"
+                    placeholder="Número de teléfono"
+                  />
+                </div>
+
+                @if (intentoEnviarRegistro && erroresRegistro['telefono']) {
+                  <small class="field-error">{{ erroresRegistro['telefono'] }}</small>
+                }
+              </div>
+
+              <!-- CORREO -->
+              <div class="form-group">
+                <label for="correo">Correo electrónico *</label>
+                <input
+                  id="correo"
+                  name="correo"
+                  type="email"
+                  [(ngModel)]="nuevoUsuario.correo"
+                  (ngModelChange)="intentoEnviarRegistro && validarRegistro()"
+                  [class.form-control-error]="intentoEnviarRegistro && erroresRegistro['correo']"
+                  placeholder="correo@ejemplo.com"
+                />
+
+                @if (intentoEnviarRegistro && erroresRegistro['correo']) {
+                  <small class="field-error">{{ erroresRegistro['correo'] }}</small>
+                }
+              </div>
+
+              <!-- FECHA NACIMIENTO -->
+              <div class="form-group">
+                <label for="fechaNacimiento">Fecha de nacimiento *</label>
+                <input
+                  id="fechaNacimiento"
+                  name="fechaNacimiento"
+                  type="date"
+                  [(ngModel)]="nuevoUsuario.fechaNacimiento"
+                  (ngModelChange)="intentoEnviarRegistro && validarRegistro()"
+                  [class.form-control-error]="intentoEnviarRegistro && erroresRegistro['fechaNacimiento']"
+                />
+
+                @if (intentoEnviarRegistro && erroresRegistro['fechaNacimiento']) {
+                  <small class="field-error">{{ erroresRegistro['fechaNacimiento'] }}</small>
+                }
+              </div>
+
+              <!-- GENERO -->
+              <div class="form-group">
+                <label for="genero">Género *</label>
+                <select
+                  id="genero"
+                  name="genero"
+                  [(ngModel)]="nuevoUsuario.genero"
+                  (ngModelChange)="intentoEnviarRegistro && validarRegistro()"
+                  [class.form-control-error]="intentoEnviarRegistro && erroresRegistro['genero']"
+                >
+                  <option value="">Seleccionar género</option>
+                  <option value="MASCULINO">Masculino</option>
+                  <option value="FEMENINO">Femenino</option>
+                </select>
+
+                @if (intentoEnviarRegistro && erroresRegistro['genero']) {
+                  <small class="field-error">{{ erroresRegistro['genero'] }}</small>
+                }
+              </div>
+
+            </div>
+          </section>
+
+          <!-- DATOS DE ACCESO -->
+          <section class="modal-section">
+            <h3>Datos de acceso</h3>
+
+            <div class="modal-form-grid">
+
+              <!-- USERNAME -->
+              <div class="form-group">
+                <label for="username">Nombre de usuario *</label>
+                <input
+                  id="username"
+                  name="username"
+                  type="text"
+                  [(ngModel)]="nuevoUsuario.username"
+                  (ngModelChange)="intentoEnviarRegistro && validarRegistro()"
+                  [class.form-control-error]="intentoEnviarRegistro && erroresRegistro['username']"
+                  placeholder="Ej. usuario123"
+                />
+
+                @if (intentoEnviarRegistro && erroresRegistro['username']) {
+                  <small class="field-error">{{ erroresRegistro['username'] }}</small>
+                }
+              </div>
+
+              <!-- PASSWORD -->
+              <div class="form-group">
+                <label for="password">Contraseña *</label>
+
+                <div class="password-wrapper">
+                  <input
+                    id="password"
+                    name="password"
+                    [type]="mostrarPassword ? 'text' : 'password'"
+                    [(ngModel)]="nuevoUsuario.password"
+                    (ngModelChange)="intentoEnviarRegistro && validarRegistro()"
+                    [class.form-control-error]="intentoEnviarRegistro && erroresRegistro['password']"
+                    placeholder="Mínimo 8 caracteres"
+                  />
+
+                  <button
+                    type="button"
+                    (click)="mostrarPassword = !mostrarPassword"
+                  >
+                    {{ mostrarPassword ? 'Ocultar' : 'Mostrar' }}
+                  </button>
+                </div>
+
+                @if (intentoEnviarRegistro && erroresRegistro['password']) {
+                  <small class="field-error">{{ erroresRegistro['password'] }}</small>
+                }
+              </div>
+
+            </div>
+          </section>
+
+          <!-- ERROR GENERAL -->
+          @if (erroresRegistro['general']) {
+            <div class="modal-error">
+              {{ erroresRegistro['general'] }}
+            </div>
+          }
+
+          <!-- BOTONES -->
+          <footer class="modal-footer">
+            <button
+              type="button"
+              class="btn-secondary"
+              (click)="cerrarRegistroUsuario()"
+              [disabled]="guardandoRegistro"
+            >
+              Cancelar
+            </button>
+
+            <button
+              type="submit"
+              class="btn-primary"
+              [disabled]="guardandoRegistro"
+            >
+              {{ guardandoRegistro ? 'Registrando...' : 'Registrar usuario' }}
+            </button>
+          </footer>
+
+        </form>
+
+      </div>
+    </div>
+  }
+
+</section>

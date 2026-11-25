@@ -7,6 +7,7 @@ import { EstudianteLayout } from './layouts/estudiante-layout/estudiante-layout'
 import { authGuard, roleGuard } from './core/guards/auth-guard';
 
 export const routes: Routes = [
+  // LOGIN
   {
     path: 'login',
     component: Login,
@@ -36,6 +37,18 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./pages/admin/grupos/grupos')
             .then(m => m.Grupos),
+      },
+      {
+        path: 'reportes',
+        loadComponent: () =>
+          import('./pages/admin/reportes/reportes')
+            .then(m => m.Reportes),
+      },
+      {
+        path: 'usuarios',
+        loadComponent: () =>
+          import('./pages/admin/usuarios/usuarios')
+            .then(m => m.Usuarios),
       },
       {
         path: 'perfil',
@@ -105,12 +118,14 @@ export const routes: Routes = [
         .then(m => m.AccessDenied),
   },
 
+  // RUTA PRINCIPAL
   {
     path: '',
     redirectTo: 'login',
     pathMatch: 'full',
   },
 
+  // RUTA NO ENCONTRADA
   {
     path: '**',
     redirectTo: 'login',

@@ -1,0 +1,496 @@
+
+@use '../../../../styles/variables' as *;
+
+// ==========================================
+// PÁGINA DE REPORTES
+// ==========================================
+
+.reportes-page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+// ==========================================
+// ENCABEZADO
+// ==========================================
+
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  h1 {
+    margin: 6px 0;
+    color: $color-gray-900;
+    font-size: 28px;
+    font-weight: 800;
+  }
+
+  p {
+    margin: 0;
+    color: $color-gray-600;
+    font-size: 14px;
+  }
+}
+
+.section-kicker {
+  color: $color-red;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+// ==========================================
+// TARJETAS GENERALES
+// ==========================================
+
+.card {
+  padding: 24px;
+  border: 1px solid $color-gray-200;
+  border-radius: 12px;
+  background: $color-white;
+  box-shadow: 0 3px 12px rgb(0 0 0 / 4%);
+}
+
+.card-heading {
+  margin-bottom: 22px;
+
+  h2 {
+    margin: 0 0 6px;
+    color: $color-gray-900;
+    font-size: 19px;
+    font-weight: 700;
+  }
+
+  p {
+    margin: 0;
+    color: $color-gray-500;
+    font-size: 13px;
+  }
+}
+
+// ==========================================
+// FORMULARIO Y FILTROS
+// ==========================================
+
+.report-form {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+
+  label {
+    color: $color-gray-700;
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  input,
+  select {
+    width: 100%;
+    min-height: 44px;
+    padding: 10px 12px;
+    border: 1px solid $color-gray-300;
+    border-radius: 8px;
+    background: $color-white;
+    color: $color-gray-900;
+    font: inherit;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+
+    &:focus {
+      border-color: $color-red;
+      box-shadow: 0 0 0 3px rgb(255 36 0 / 10%);
+    }
+  }
+}
+
+.filter-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 22px;
+}
+
+.btn-primary {
+  min-height: 44px;
+  padding: 11px 22px;
+  border: 0;
+  border-radius: 8px;
+  background: $color-red;
+  color: $color-white;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: $transition-base;
+
+  &:hover:not(:disabled) {
+    filter: brightness(0.9);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+// ==========================================
+// MENSAJES
+// ==========================================
+
+.form-error {
+  margin-top: 16px;
+  padding: 12px 14px;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  background: $color-red-light;
+  color: #b91c1c;
+  font-size: 13px;
+}
+
+.state-message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 150px;
+  color: $color-gray-500;
+  text-align: center;
+
+  p {
+    margin: 0;
+    font-size: 14px;
+  }
+}
+
+.loader {
+  width: 30px;
+  height: 30px;
+  border: 3px solid $color-gray-200;
+  border-top-color: $color-red;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// ==========================================
+// ESTADÍSTICAS
+// ==========================================
+
+.statistics-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.stat-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 22px;
+  border: 1px solid $color-gray-200;
+  border-radius: 12px;
+  background: $color-white;
+  box-shadow: 0 3px 12px rgb(0 0 0 / 3%);
+
+  strong {
+    color: $color-gray-900;
+    font-size: 30px;
+    font-weight: 800;
+  }
+
+  &--highlight {
+    border-color: rgb(255 36 0 / 25%);
+    background: #fff8f6;
+
+    strong {
+      color: $color-red;
+    }
+  }
+}
+
+.stat-label {
+  color: $color-gray-600;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+// ==========================================
+// TABLA DE RESULTADOS
+// ==========================================
+
+.results-card {
+  min-width: 0;
+}
+
+.list-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+
+  h2 {
+    margin: 0 0 6px;
+    color: $color-gray-900;
+    font-size: 19px;
+  }
+
+  p {
+    margin: 0;
+    color: $color-gray-500;
+    font-size: 13px;
+  }
+
+  > span {
+    color: $color-gray-600;
+    font-size: 13px;
+  }
+}
+
+.table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    white-space: nowrap;
+  }
+
+  th {
+    padding: 14px 12px;
+    background: $color-gray-50;
+    color: $color-gray-700;
+    font-size: 12px;
+    font-weight: 700;
+    text-align: left;
+  }
+
+  td {
+    padding: 14px 12px;
+    border-bottom: 1px solid $color-gray-200;
+    color: $color-gray-700;
+    font-size: 13px;
+  }
+
+  tbody tr:hover {
+    background: $color-gray-50;
+  }
+}
+
+// ==========================================
+// ESTADOS DE ASISTENCIA
+// ==========================================
+
+.status-badge {
+  display: inline-flex;
+  padding: 5px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.status-present {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.status-late {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.status-absent {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.status-justified {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+// ==========================================
+// RESPONSIVE
+// ==========================================
+
+@media (max-width: 900px) {
+  .report-form {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .statistics-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 600px) {
+  .reportes-page {
+    gap: 18px;
+  }
+
+  .page-header h1 {
+    font-size: 23px;
+  }
+
+  .card {
+    padding: 17px;
+  }
+
+  .report-form {
+    grid-template-columns: 1fr;
+  }
+
+  .statistics-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .stat-card {
+    padding: 15px;
+
+    strong {
+      font-size: 24px;
+    }
+  }
+
+  .filter-actions {
+    button {
+      width: 100%;
+    }
+  }
+
+  .list-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
+
+// ==========================================
+// GRÁFICOS ESTADÍSTICOS
+// ==========================================
+
+.charts-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.chart-card {
+  min-width: 0;
+  padding: 24px;
+}
+
+.chart-header {
+  margin-bottom: 20px;
+
+  h2 {
+    margin: 0 0 6px;
+    color: $color-gray-900;
+    font-size: 18px;
+    font-weight: 700;
+  }
+
+  p {
+    margin: 0;
+    color: $color-gray-500;
+    font-size: 13px;
+  }
+}
+
+.chart-container {
+  position: relative;
+  width: 100%;
+
+  &--doughnut {
+    height: 300px;
+  }
+
+  &--bar {
+    height: 300px;
+  }
+}
+
+// ==========================================
+// RESPONSIVE
+// ==========================================
+
+@media (max-width: 900px) {
+  .charts-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .chart-card {
+    padding: 17px;
+  }
+
+  .chart-container {
+    &--doughnut,
+    &--bar {
+      height: 260px;
+    }
+  }
+}
+
+
+// ==========================================
+// REPORTE SIN REGISTROS
+// ==========================================
+
+.empty-report {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 260px;
+  padding: 35px;
+  text-align: center;
+
+  &__icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: $color-gray-100;
+    font-size: 30px;
+  }
+
+  h2 {
+    margin: 0;
+    font-size: 20px;
+    color: $color-black;
+  }
+
+  p {
+    margin: 0;
+    color: $color-gray-600;
+    font-size: 14px;
+  }
+
+  &__date {
+    margin-top: 5px;
+    color: $color-red;
+    font-size: 13px;
+    font-weight: 600;
+  }
+}
