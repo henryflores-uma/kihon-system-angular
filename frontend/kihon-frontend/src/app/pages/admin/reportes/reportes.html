@@ -123,7 +123,7 @@
       <!-- FILTRO ESTUDIANTE -->
       @if (tipoReporte === 'ESTUDIANTE') {
         <div class="form-group">
-          <label for="estudianteId">Estudiante</label>
+         <label for="estudianteId">Estudiante</label>
 
           <select
             id="estudianteId"
@@ -238,80 +238,152 @@
 
     </section>
 
-    <!-- DETALLE -->
-    <section class="card results-card">
+<!-- ========================================== -->
+<!-- GRÁFICOS Y DETALLE DE ASISTENCIAS -->
+<!-- ========================================== -->
 
-      <div class="list-header">
+@if (reporte.total > 0) {
+
+  <!-- GRÁFICOS ESTADÍSTICOS -->
+  <section class="charts-grid">
+
+    <!-- GRÁFICO DE DONA -->
+    <article class="card chart-card">
+
+      <div class="chart-header">
         <div>
-          <h2>Detalle de asistencias</h2>
-
-          <p>
-            {{ reporte.fechaInicio }}
-            @if (reporte.fechaFin !== reporte.fechaInicio) {
-              — {{ reporte.fechaFin }}
-            }
-          </p>
+          <h2>Distribución de asistencias</h2>
+          <p>Porcentaje de registros según su estado.</p>
         </div>
-
-        <span>
-          {{ reporte.asistencias.length }}
-          registros
-        </span>
       </div>
 
-      @if (reporte.asistencias.length > 0) {
+      <div class="chart-container chart-container--doughnut">
+        <canvas #distribucionChart></canvas>
+      </div>
 
-        <div class="table-wrapper">
-          <table>
-            <thead>
+    </article>
+
+    <!-- GRÁFICO DE BARRAS -->
+    <article class="card chart-card">
+
+      <div class="chart-header">
+        <div>
+          <h2>Asistencias por estado</h2>
+          <p>Comparación de cantidades registradas.</p>
+        </div>
+      </div>
+
+      <div class="chart-container chart-container--bar">
+        <canvas #comparacionChart></canvas>
+      </div>
+
+    </article>
+
+  </section>
+
+  <!-- DETALLE DE ASISTENCIAS -->
+  <section class="card results-card">
+
+    <div class="list-header">
+      <div>
+        <h2>Detalle de asistencias</h2>
+
+        <p>
+          {{ reporte.fechaInicio }}
+
+          @if (reporte.fechaFin !== reporte.fechaInicio) {
+            — {{ reporte.fechaFin }}
+          }
+        </p>
+      </div>
+
+      <span>
+        {{ reporte.asistencias.length }} registros
+      </span>
+    </div>
+
+    @if (reporte.asistencias.length > 0) {
+
+      <div class="table-wrapper">
+
+        <table>
+          <thead>
+            <tr>
+              <th>Estudiante</th>
+              <th>Grupo</th>
+              <th>Fecha</th>
+              <th>Hora</th>
+              <th>Estado</th>
+              <th>Observación</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            @for (
+              asistencia of reporte.asistencias;
+              track asistencia.id
+            ) {
               <tr>
-                <th>Estudiante</th>
-                <th>Grupo</th>
-                <th>Fecha</th>
-                <th>Hora</th>
-                <th>Estado</th>
-                <th>Observación</th>
+                <td>{{ asistencia.estudianteNombre }}</td>
+                <td>{{ asistencia.grupoNombre }}</td>
+                <td>{{ asistencia.fecha }}</td>
+                <td>{{ asistencia.horaLlegada || '-' }}</td>
+
+                <td>
+                  <span
+                    class="status-badge"
+                    [class.status-present]="asistencia.estado === 'PRESENTE'"
+                    [class.status-late]="asistencia.estado === 'TARDANZA'"
+                    [class.status-absent]="asistencia.estado === 'AUSENTE'"
+                    [class.status-justified]="asistencia.estado === 'JUSTIFICADO'"
+                  >
+                    {{ obtenerNombreEstado(asistencia.estado) }}
+                  </span>
+                </td>
+
+                <td>{{ asistencia.observacion || '-' }}</td>
               </tr>
-            </thead>
+            }
+          </tbody>
+        </table>
 
-            <tbody>
-              @for (
-                asistencia of reporte.asistencias;
-                track asistencia.id
-              ) {
-                <tr>
-                  <td>{{ asistencia.estudianteNombre }}</td>
-                  <td>{{ asistencia.grupoNombre }}</td>
-                  <td>{{ asistencia.fecha }}</td>
-                  <td>{{ asistencia.horaLlegada || '-' }}</td>
+      </div>
 
-                  <td>
-                    <span
-                      class="status-badge"
-                      [class.status-present]="asistencia.estado === 'PRESENTE'"
-                      [class.status-late]="asistencia.estado === 'TARDANZA'"
-                      [class.status-absent]="asistencia.estado === 'AUSENTE'"
-                      [class.status-justified]="asistencia.estado === 'JUSTIFICADO'"
-                    >
-                      {{ obtenerNombreEstado(asistencia.estado) }}
-                    </span>
-                  </td>
+    } @else {
+      <div class="state-message">
+        <p>No hay registros de asistencia para esta consulta.</p>
+      </div>
+    }
 
-                  <td>{{ asistencia.observacion || '-' }}</td>
-                </tr>
-              }
-            </tbody>
-          </table>
-        </div>
+  </section>
 
-      } @else {
-        <div class="state-message">
-          <p>No hay registros de asistencia para esta consulta.</p>
-        </div>
+} @else {
+
+  <!-- SIN REGISTROS -->
+  <section class="card empty-report">
+
+    <div class="empty-report__icon">
+  <span>&#128197;</span>
+</div>
+
+    <h2>No hay registros de asistencia</h2>
+
+    <p>
+      No se encontraron asistencias registradas
+      para el período seleccionado.
+    </p>
+
+    <span class="empty-report__date">
+      {{ reporte.fechaInicio }}
+
+      @if (reporte.fechaFin !== reporte.fechaInicio) {
+        — {{ reporte.fechaFin }}
       }
+    </span>
 
-    </section>
+  </section>
 
+  }
   }
 
 </section>

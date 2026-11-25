@@ -379,3 +379,118 @@
     flex-direction: column;
   }
 }
+
+
+// ==========================================
+// GRÁFICOS ESTADÍSTICOS
+// ==========================================
+
+.charts-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.chart-card {
+  min-width: 0;
+  padding: 24px;
+}
+
+.chart-header {
+  margin-bottom: 20px;
+
+  h2 {
+    margin: 0 0 6px;
+    color: $color-gray-900;
+    font-size: 18px;
+    font-weight: 700;
+  }
+
+  p {
+    margin: 0;
+    color: $color-gray-500;
+    font-size: 13px;
+  }
+}
+
+.chart-container {
+  position: relative;
+  width: 100%;
+
+  &--doughnut {
+    height: 300px;
+  }
+
+  &--bar {
+    height: 300px;
+  }
+}
+
+// ==========================================
+// RESPONSIVE
+// ==========================================
+
+@media (max-width: 900px) {
+  .charts-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .chart-card {
+    padding: 17px;
+  }
+
+  .chart-container {
+    &--doughnut,
+    &--bar {
+      height: 260px;
+    }
+  }
+}
+
+
+// ==========================================
+// REPORTE SIN REGISTROS
+// ==========================================
+
+.empty-report {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 260px;
+  padding: 35px;
+  text-align: center;
+
+  &__icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: $color-gray-100;
+    font-size: 30px;
+  }
+
+  h2 {
+    margin: 0;
+    font-size: 20px;
+    color: $color-black;
+  }
+
+  p {
+    margin: 0;
+    color: $color-gray-600;
+    font-size: 14px;
+  }
+
+  &__date {
+    margin-top: 5px;
+    color: $color-red;
+    font-size: 13px;
+    font-weight: 600;
+  }
+}
