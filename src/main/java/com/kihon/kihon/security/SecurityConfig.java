@@ -58,33 +58,47 @@ public class SecurityConfig {
         // =============================================================
 
         @Bean
-        public CorsConfigurationSource corsConfigurationSource() {
+public CorsConfigurationSource corsConfigurationSource() {
 
-                CorsConfiguration configuration = new CorsConfiguration();
+    CorsConfiguration configuration = new CorsConfiguration();
 
-                configuration.setAllowedOrigins(
-                                List.of("http://localhost:4200"));
+    // Dominios autorizados
+    configuration.setAllowedOrigins(
+        List.of(
+            "http://localhost:4200",
+            "https://kihon-system-angular.vercel.app"
+        )
+    );
 
-                configuration.setAllowedMethods(
-                                List.of(
-                                                "GET",
-                                                "POST",
-                                                "PUT",
-                                                "PATCH",
-                                                "DELETE",
-                                                "OPTIONS"));
+    // Métodos HTTP permitidos
+    configuration.setAllowedMethods(
+        List.of(
+            "GET",
+            "POST",
+            "PUT",
+            "PATCH",
+            "DELETE",
+            "OPTIONS"
+        )
+    );
 
-                configuration.setAllowedHeaders(
-                                List.of("*"));
+    // Headers permitidos
+    configuration.setAllowedHeaders(
+        List.of("*")
+    );
 
-                configuration.setAllowCredentials(true);
+    // Permitir cookies y sesiones
+    configuration.setAllowCredentials(true);
 
-                UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+    UrlBasedCorsConfigurationSource source =
+        new UrlBasedCorsConfigurationSource();
 
-                source.registerCorsConfiguration("/**", configuration);
+    source.registerCorsConfiguration("/**", configuration);
 
-                return source;
-        }
+    return source;
+}
+
+                
 
         // =============================================================
         // CONFIGURACIÓN PRINCIPAL DE SEGURIDAD
