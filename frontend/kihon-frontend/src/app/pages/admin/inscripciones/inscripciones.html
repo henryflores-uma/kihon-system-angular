@@ -1,0 +1,460 @@
+
+<section class="enrollment-page">
+
+  <header class="page-header">
+    <div>
+      <span class="page-kicker">GESTIÓN ACADÉMICA</span>
+      <h1>Inscripciones</h1>
+      <p>Administra las inscripciones de estudiantes en los grupos de entrenamiento.</p>
+    </div>
+
+    <button class="btn-primary" (click)="seleccionarVista('nueva')">
+      + Nueva inscripción
+    </button>
+  </header>
+
+  @if (mensajeError) {
+    <div class="alert alert-error">
+      {{ mensajeError }}
+      <button (click)="limpiarMensajes()">×</button>
+    </div>
+  }
+
+  @if (mensajeExito) {
+    <div class="alert alert-success">
+      {{ mensajeExito }}
+      <button (click)="limpiarMensajes()">×</button>
+    </div>
+  }
+
+  <nav class="enrollment-tabs">
+    <button
+      [class.active]="vista === 'todas'"
+      (click)="seleccionarVista('todas')">
+      Todas las inscripciones
+    </button>
+
+    <button
+      [class.active]="vista === 'grupos'"
+      (click)="seleccionarVista('grupos')">
+      Inscritos por grupo
+    </button>
+
+    <button
+      [class.active]="vista === 'nueva'"
+      (click)="seleccionarVista('nueva')">
+      Nueva inscripción
+    </button>
+  </nav>
+
+  @if (cargando) {
+    <div class="loading-state">
+      Cargando información de inscripciones...
+    </div>
+  } @else {
+
+    @if (vista === 'todas') {
+
+      <div class="stats-grid">
+
+  <!-- ESTUDIANTES ÚNICOS -->
+  <article class="stat-card">
+    <span>Estudiantes únicos</span>
+    <strong>{{ totalEstudiantesUnicos }}</strong>
+    <small>Estudiantes con inscripción</small>
+  </article>
+
+  <!-- ASIGNACIONES A GRUPOS -->
+  <article class="stat-card">
+    <span>Asignaciones a grupos</span>
+    <strong>{{ totalInscripciones }}</strong>
+    <small>Total de grupos asignados</small>
+  </article>
+
+  <!-- GRUPOS CON INSCRIPCIONES -->
+  <article class="stat-card">
+    <span>Grupos con inscripciones</span>
+    <strong>{{ totalGruposConInscripciones }}</strong>
+    <small>{{ totalCuposDisponibles }} cupos disponibles</small>
+  </article>
+
+</div>
+
+      <section class="content-card">
+
+        <div class="section-heading">
+          <div>
+            <h2>Listado de inscripciones</h2>
+            <p>Consulta y administra las asignaciones de estudiantes.</p>
+          </div>
+
+          <span class="result-count">
+            {{ inscripcionesFiltradas.length }} registros
+          </span>
+        </div>
+
+        <div class="filters-grid">
+
+          <div class="form-group">
+            <label>Buscar estudiante</label>
+            <input
+              type="text"
+              [(ngModel)]="busqueda"
+              placeholder="Nombre, DNI o grupo..."
+            />
+          </div>
+
+          <div class="form-group">
+            <label>Grupo</label>
+            <select [(ngModel)]="filtroGrupo">
+              <option value="">Todos los grupos</option>
+              @for (grupo of grupos; track grupo.id) {
+                <option [value]="grupo.id">{{ grupo.nombre }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Estado</label>
+            <select [(ngModel)]="filtroEstado">
+              <option value="">Todos</option>
+              <option value="ACTIVO">Activo</option>
+              <option value="INACTIVO">Inactivo</option>
+            </select>
+          </div>
+
+          <button class="btn-secondary" (click)="limpiarFiltros()">
+            Limpiar
+          </button>
+
+        </div>
+
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>Estudiante</th>
+                <th>Documento</th>
+                <th>Grupo</th>
+                <th>Fecha de inscripción</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              @for (item of inscripcionesFiltradas; track item.id) {
+                <tr>
+                  <td>
+                    <div class="student-cell">
+                      <div class="student-avatar">
+                        {{ item.estudianteNombre.charAt(0) }}
+                      </div>
+                      <strong>
+                        {{ nombreCompleto(item.estudianteId, item.estudianteNombre) }}
+                      </strong>
+                    </div>
+                  </td>
+
+                  <td>
+                    {{ buscarEstudiante(item.estudianteId)?.documento || '—' }}
+                  </td>
+
+                  <td>{{ item.grupoNombre }}</td>
+
+                  <td>{{ formatFecha(item.fechaInscripcion) }}</td>
+
+                  <td>
+                    <span
+                      class="status"
+                      [class.status-active]="item.estado === 'ACTIVO'"
+                      [class.status-inactive]="item.estado !== 'ACTIVO'">
+                      {{ item.estado }}
+                    </span>
+                  </td>
+
+                  <td>
+                    <div class="action-buttons">
+                      <button
+                        class="btn-action btn-edit"
+                        title="Cambiar grupo"
+                        (click)="abrirEdicion(item)">
+                        Cambiar grupo
+                      </button>
+
+                      <button
+                        class="btn-action"
+                        [class.btn-disable]="item.estado === 'ACTIVO'"
+                        [class.btn-enable]="item.estado !== 'ACTIVO'"
+                        (click)="cambiarEstado(item)">
+                        {{ item.estado === 'ACTIVO' ? 'Inactivar' : 'Reactivar' }}
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="6" class="empty-table">
+                    No se encontraron inscripciones.
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+      </section>
+
+    }
+
+    @if (vista === 'grupos') {
+
+      <section class="content-card">
+
+        <div class="section-heading">
+          <div>
+            <h2>Inscritos por grupo</h2>
+            <p>Selecciona un grupo para consultar sus estudiantes activos.</p>
+          </div>
+        </div>
+
+        <div class="group-selector">
+          <div class="form-group">
+            <label>Seleccionar grupo</label>
+            <select
+              [(ngModel)]="grupoConsultar">
+              <option [ngValue]="null">Selecciona un grupo</option>
+              @for (grupo of grupos; track grupo.id) {
+                <option [ngValue]="grupo.id">{{ grupo.nombre }}</option>
+              }
+            </select>
+          </div>
+        </div>
+
+        @if (grupoSeleccionado; as grupo) {
+
+          <div class="group-summary">
+
+            <div>
+              <span>GRUPO SELECCIONADO</span>
+              <h3>{{ grupo.nombre }}</h3>
+              <p>Sensei: {{ grupo.senseiNombre || 'Sin asignar' }}</p>
+            </div>
+
+            <div class="capacity-box">
+              <strong>{{ grupo.estudiantesActivos }} / {{ grupo.capacidad }}</strong>
+              <span>Estudiantes inscritos</span>
+            </div>
+
+            <div class="capacity-box">
+              <strong>{{ grupo.cuposDisponibles }}</strong>
+              <span>Cupos disponibles</span>
+            </div>
+
+          </div>
+
+          <div class="table-responsive">
+            <table>
+              <thead>
+                <tr>
+                  <th>Estudiante</th>
+                  <th>Documento</th>
+                  <th>Teléfono</th>
+                  <th>Fecha de inscripción</th>
+                  <th>Estado</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                @for (item of inscripcionesDelGrupo; track item.id) {
+                  <tr>
+                    <td>
+                      {{ nombreCompleto(item.estudianteId, item.estudianteNombre) }}
+                    </td>
+                    <td>{{ buscarEstudiante(item.estudianteId)?.documento || '—' }}</td>
+                    <td>{{ buscarEstudiante(item.estudianteId)?.telefono || '—' }}</td>
+                    <td>{{ formatFecha(item.fechaInscripcion) }}</td>
+                    <td><span class="status status-active">ACTIVO</span></td>
+                  </tr>
+                } @empty {
+                  <tr>
+                    <td colspan="5" class="empty-table">
+                      Este grupo todavía no tiene estudiantes inscritos.
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+
+        } @else {
+          <div class="empty-state">
+            <h3>Selecciona un grupo</h3>
+            <p>Aquí aparecerá la información de sus estudiantes inscritos.</p>
+          </div>
+        }
+
+      </section>
+
+    }
+
+    @if (vista === 'nueva') {
+
+      <section class="content-card enrollment-form">
+
+        <div class="section-heading">
+          <div>
+            <h2>Registrar nueva inscripción</h2>
+            <p>Selecciona al estudiante y los grupos a los que deseas inscribirlo.</p>
+          </div>
+        </div>
+
+        <div class="form-group student-select">
+          <label>Seleccionar estudiante *</label>
+
+          <select [(ngModel)]="estudianteSeleccionado">
+            <option [ngValue]="null">Selecciona un estudiante</option>
+
+            @for (estudiante of estudiantesActivos; track estudiante.id) {
+              <option [ngValue]="estudiante.id">
+                {{ estudiante.nombre }} {{ estudiante.apellido }}
+                — {{ estudiante.documento || 'Sin documento' }}
+              </option>
+            }
+          </select>
+        </div>
+
+        <div class="section-heading groups-heading">
+          <div>
+            <h3>Seleccionar grupos *</h3>
+            <p>Marca uno o varios grupos disponibles.</p>
+          </div>
+          <span class="result-count">
+            {{ gruposSeleccionados.length }} seleccionados
+          </span>
+        </div>
+
+        <div class="available-groups">
+
+          @for (grupo of gruposActivos; track grupo.id) {
+
+            <label
+              class="group-option"
+              [class.group-option-selected]="estaGrupoSeleccionado(grupo.id)"
+              [class.group-option-disabled]="!puedeInscribirse(grupo)">
+
+              <input
+                type="checkbox"
+                [checked]="estaGrupoSeleccionado(grupo.id)"
+                [disabled]="!puedeInscribirse(grupo) ||
+                  (estudianteSeleccionado !== null &&
+                  yaEstaInscrito(estudianteSeleccionado, grupo.id))"
+                (change)="toggleGrupo(grupo.id, $any($event.target).checked)"
+              />
+
+              <div class="group-option-info">
+                <strong>{{ grupo.nombre }}</strong>
+                <span>{{ grupo.frecuenciaNombre || 'Sin frecuencia' }}</span>
+                <small>Sensei: {{ grupo.senseiNombre || 'Sin asignar' }}</small>
+              </div>
+
+              <div class="group-option-capacity">
+                <strong>{{ grupo.cuposDisponibles }}</strong>
+                <span>cupos libres</span>
+              </div>
+
+            </label>
+
+          } @empty {
+            <div class="empty-state">
+              No hay grupos activos disponibles.
+            </div>
+          }
+
+        </div>
+
+        <div class="form-footer">
+          <button
+            class="btn-secondary"
+            (click)="seleccionarVista('todas')">
+            Cancelar
+          </button>
+
+          <button
+            class="btn-primary"
+            [disabled]="guardando"
+            (click)="registrarInscripcion()">
+            {{ guardando ? 'Registrando...' : 'Confirmar inscripción' }}
+          </button>
+        </div>
+
+      </section>
+
+    }
+
+  }
+
+  @if (asignacionEditando) {
+
+    <div class="modal-overlay" (click)="cancelarEdicion()">
+
+      <section class="modal-card" (click)="$event.stopPropagation()">
+
+        <div class="modal-header">
+          <div>
+            <span class="page-kicker">GESTIÓN DE INSCRIPCIONES</span>
+            <h2>Cambiar grupo</h2>
+          </div>
+
+          <button class="modal-close" (click)="cancelarEdicion()">×</button>
+        </div>
+
+        <p>
+          Estudiante:
+          <strong>
+            {{ nombreCompleto(
+              asignacionEditando.estudianteId,
+              asignacionEditando.estudianteNombre
+            ) }}
+          </strong>
+        </p>
+
+        <div class="form-group">
+          <label>Nuevo grupo</label>
+
+          <select [(ngModel)]="nuevoGrupoId">
+            @for (grupo of gruposActivos; track grupo.id) {
+              @if (
+                grupo.id === asignacionEditando.grupoId ||
+                (grupo.cuposDisponibles > 0 &&
+                !yaEstaInscrito(asignacionEditando.estudianteId, grupo.id))
+              ) {
+                <option [ngValue]="grupo.id">
+                  {{ grupo.nombre }}
+                  ({{ grupo.cuposDisponibles }} cupos)
+                </option>
+              }
+            }
+          </select>
+        </div>
+
+        <div class="modal-actions">
+          <button class="btn-secondary" (click)="cancelarEdicion()">
+            Cancelar
+          </button>
+
+          <button
+            class="btn-primary"
+            [disabled]="guardando"
+            (click)="guardarCambioGrupo()">
+            {{ guardando ? 'Guardando...' : 'Guardar cambios' }}
+          </button>
+        </div>
+
+      </section>
+
+    </div>
+
+  }
+
+</section>

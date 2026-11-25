@@ -37,12 +37,12 @@ export class Sidebar {
       ]
     },
     {
-      title: 'Control',
-      items: [
-        { label: 'Asistencia', route: '/admin/asistencia' },
-        { label: 'Horario', route: '/admin/horario' }
-      ]
-    },
+  title: 'Control',
+  items: [
+    { label: 'Asistencias', route: '/admin/asistencias' },
+    { label: 'Horario', route: '/admin/horario' }
+  ]
+},
     {
       title: 'Administración',
       items: [
