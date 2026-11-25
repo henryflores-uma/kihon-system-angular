@@ -5,7 +5,8 @@ import {
   ElementRef,
   OnDestroy,
   ViewChild,
-  inject
+  inject,
+  ChangeDetectorRef
 } from '@angular/core';
 
 import { HttpErrorResponse } from '@angular/common/http';
@@ -36,6 +37,7 @@ interface LoadResult<T> {
 export class Dashboard implements AfterViewInit, OnDestroy {
 
   private readonly dashboardService = inject(DashboardService);
+  private readonly cdr = inject(ChangeDetectorRef);
 
   @ViewChild('weeklyAttendanceChart')
   weeklyCanvas!: ElementRef<HTMLCanvasElement>;
@@ -99,6 +101,19 @@ export class Dashboard implements AfterViewInit, OnDestroy {
       )
     }).subscribe({
       next: (result) => {
+        console.log('========== DASHBOARD DEBUG ==========');
+
+console.log('Resultado estudiantes:', result.students);
+console.log('Cantidad estudiantes:', result.students.data.length);
+
+console.log('Resultado grupos:', result.groups);
+console.log('Cantidad grupos:', result.groups.data.length);
+
+console.log('Asistencias:', result.attendance);
+
+console.log('Eventos:', result.events);
+
+console.log('=====================================');
         this.students = result.students.data;
         this.groups = result.groups.data;
         this.todayEvents = result.events.data;
@@ -131,6 +146,12 @@ export class Dashboard implements AfterViewInit, OnDestroy {
         }
 
         this.isLoading = false;
+        console.log('Total estudiantes:', this.totalStudents);
+        console.log('Estudiantes activos:', this.activeStudents);
+        console.log('Grupos activos:', this.activeGroups);
+        console.log('Estado de carga:', this.isLoading);
+
+        this.cdr.detectChanges();
       },
       error: (error: HttpErrorResponse) => {
         this.errorMessage =
@@ -139,6 +160,8 @@ export class Dashboard implements AfterViewInit, OnDestroy {
             : 'Ocurrió un error al cargar el dashboard.';
 
         this.isLoading = false;
+
+        this.cdr.detectChanges();
       }
     });
   }
