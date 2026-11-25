@@ -233,10 +233,25 @@
                     {{ obtenerNombreEstado(usuario.estado) }}
                   </span>
                 </td>
-<td>
+
+<td class="actions-cell">
+
+  <!-- EDITAR -->
   <button
     type="button"
-    class="btn-primary"
+    class="btn-action btn-edit"
+    title="Editar usuario"
+    (click)="abrirEdicion(usuario)"
+  >
+    Editar
+  </button>
+
+  <!-- ACTIVAR / DESACTIVAR -->
+  <button
+    type="button"
+    class="btn-action"
+    [class.btn-deactivate]="usuario.estado === 'ACTIVO'"
+    [class.btn-activate]="usuario.estado !== 'ACTIVO'"
     [disabled]="usuariosProcesando.includes(usuario.id)"
     (click)="cambiarEstadoUsuario(usuario)"
   >
@@ -246,7 +261,9 @@
       {{ usuario.estado === 'ACTIVO' ? 'Desactivar' : 'Activar' }}
     }
   </button>
+
 </td>
+
               </tr>
             }
           </tbody>
@@ -714,6 +731,322 @@
         </form>
 
       </div>
+    </div>
+  }
+
+
+
+  <!-- ========================================== -->
+  <!-- MODAL EDITAR USUARIO -->
+  <!-- ========================================== -->
+
+  @if (mostrarModalEdicion && usuarioEditando) {
+    <div class="modal-overlay">
+
+      <div
+        class="modal-container modal-edit-user"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="tituloEditarUsuario"
+      >
+
+        <!-- ENCABEZADO -->
+        <header class="modal-header">
+          <div>
+            <span class="section-kicker">Administración</span>
+            <h2 id="tituloEditarUsuario">Editar usuario</h2>
+          </div>
+
+          <button
+            type="button"
+            class="modal-close"
+            aria-label="Cerrar"
+            (click)="cerrarEdicion()"
+            [disabled]="guardandoEdicion"
+          >
+            ×
+          </button>
+        </header>
+
+        <!-- FORMULARIO -->
+        <form class="modal-body edit-user-form">
+
+          <!-- FOTOGRAFÍA -->
+          <div class="edit-photo-section">
+
+            <label>Foto</label>
+
+            <div class="edit-photo-preview">
+
+              @if (fotoPreviewEdicion) {
+                <img
+                  [src]="fotoPreviewEdicion"
+                  [alt]="'Foto de ' + usuarioEditando.nombre"
+                />
+              } @else {
+                <span>
+                  {{ usuarioEditando.nombre.charAt(0).toUpperCase() }}
+                </span>
+              }
+
+            </div>
+
+            <label class="btn-photo" for="fotoEdicion">
+              Cambiar foto
+            </label>
+
+            <input
+              id="fotoEdicion"
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              hidden
+              (change)="seleccionarFotoEdicion($event)"
+            />
+
+          </div>
+
+          <!-- DATOS DE ACCESO -->
+          <section class="modal-section">
+
+            <h3>Datos de acceso</h3>
+
+            <div class="edit-form-grid">
+
+              <div class="form-group">
+                <label for="usernameEdicion">Usuario</label>
+
+                <input
+                  id="usernameEdicion"
+                  name="usernameEdicion"
+                  type="text"
+                  [(ngModel)]="nuevoUsuarioEdicion.username"
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="rolEdicion">Rol</label>
+
+                <select
+                  id="rolEdicion"
+                  name="rolEdicion"
+                  [(ngModel)]="nuevoUsuarioEdicion.rol"
+                >
+                  <option value="ADMIN">Administrador</option>
+                  <option value="SECRETARIA">Secretaría</option>
+                  <option value="SENSEI">Sensei</option>
+                  <option value="ESTUDIANTE">Estudiante</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="passwordEdicion">Nueva contraseña</label>
+
+                <div class="password-wrapper">
+                  <input
+                    id="passwordEdicion"
+                    name="passwordEdicion"
+                    [type]="mostrarPasswordEdicion ? 'text' : 'password'"
+                    [(ngModel)]="nuevoUsuarioEdicion.password"
+                    placeholder="Dejar vacío para no cambiar"
+                  />
+
+                  <button
+                    type="button"
+                    (click)="mostrarPasswordEdicion = !mostrarPasswordEdicion"
+                  >
+                    {{ mostrarPasswordEdicion ? 'Ocultar' : 'Mostrar' }}
+                  </button>
+                </div>
+
+                <small>
+                  Deja este campo vacío si no deseas cambiar la contraseña.
+                </small>
+              </div>
+
+              <div class="form-group">
+                <label for="confirmarPasswordEdicion">
+                  Confirmar nueva contraseña
+                </label>
+
+                <input
+                  id="confirmarPasswordEdicion"
+                  name="confirmarPasswordEdicion"
+                  type="password"
+                  [(ngModel)]="nuevoUsuarioEdicion.confirmarPassword"
+                  placeholder="Repite la nueva contraseña"
+                />
+
+                <small>
+                  Solo es necesario si vas a cambiar la contraseña.
+                </small>
+              </div>
+
+            </div>
+
+          </section>
+
+          <!-- DATOS PERSONALES -->
+          <section class="modal-section">
+
+            <h3>Datos personales</h3>
+
+            <div class="edit-form-grid">
+
+              <div class="form-group">
+                <label for="nombreEdicion">Nombre</label>
+
+                <input
+                  id="nombreEdicion"
+                  name="nombreEdicion"
+                  type="text"
+                  [(ngModel)]="nuevoUsuarioEdicion.nombre"
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="apellidoEdicion">Apellido</label>
+
+                <input
+                  id="apellidoEdicion"
+                  name="apellidoEdicion"
+                  type="text"
+                  [(ngModel)]="nuevoUsuarioEdicion.apellido"
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="tipoDocumentoEdicion">Tipo de documento</label>
+
+                <select
+                  id="tipoDocumentoEdicion"
+                  name="tipoDocumentoEdicion"
+                  [(ngModel)]="nuevoUsuarioEdicion.tipoDocumento"
+                >
+                  <option value="DNI">DNI</option>
+                  <option value="CE">Carné de extranjería</option>
+                  <option value="PASAPORTE">Pasaporte</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="numeroDocumentoEdicion">
+                  Número de documento
+                </label>
+
+                <input
+                  id="numeroDocumentoEdicion"
+                  name="numeroDocumentoEdicion"
+                  type="text"
+                  [(ngModel)]="nuevoUsuarioEdicion.numeroDocumento"
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="codigoPaisEdicion">Código de país</label>
+
+                <select
+                  id="codigoPaisEdicion"
+                  name="codigoPaisEdicion"
+                  [(ngModel)]="codigoPaisEdicion"
+                >
+                  <option value="+51">+51 Perú</option>
+                  <option value="+57">+57 Colombia</option>
+                  <option value="+56">+56 Chile</option>
+                  <option value="+54">+54 Argentina</option>
+                  <option value="+55">+55 Brasil</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="telefonoEdicion">Teléfono</label>
+
+                <input
+                  id="telefonoEdicion"
+                  name="telefonoEdicion"
+                  type="tel"
+                  [(ngModel)]="nuevoUsuarioEdicion.telefono"
+                />
+
+                <small>
+                  El número de teléfono no puede estar registrado en otra cuenta.
+                </small>
+              </div>
+
+              <div class="form-group">
+                <label for="fechaNacimientoEdicion">
+                  Fecha de nacimiento
+                </label>
+
+                <input
+                  id="fechaNacimientoEdicion"
+                  name="fechaNacimientoEdicion"
+                  type="date"
+                  [(ngModel)]="nuevoUsuarioEdicion.fechaNacimiento"
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="generoEdicion">Género</label>
+
+                <select
+                  id="generoEdicion"
+                  name="generoEdicion"
+                  [(ngModel)]="nuevoUsuarioEdicion.genero"
+                >
+                  <option value="MASCULINO">Masculino</option>
+                  <option value="FEMENINO">Femenino</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="correoEdicion">Correo electrónico</label>
+
+                <input
+                  id="correoEdicion"
+                  name="correoEdicion"
+                  type="email"
+                  [(ngModel)]="nuevoUsuarioEdicion.correo"
+                />
+              </div>
+
+            </div>
+
+          </section>
+
+          <!-- MENSAJE DE ERROR -->
+          @if (errorEdicion) {
+            <div class="modal-error" role="alert">
+              {{ errorEdicion }}
+            </div>
+          }
+
+          <!-- BOTONES -->
+          <footer class="modal-footer">
+
+            <button
+              type="button"
+              class="btn-secondary"
+              (click)="cerrarEdicion()"
+              [disabled]="guardandoEdicion"
+            >
+              Cancelar
+            </button>
+
+            <!-- Conectaremos el guardado en el siguiente paso -->
+            <button
+              type="button"
+              class="btn-primary"
+              disabled
+            >
+              Guardar cambios
+            </button>
+
+          </footer>
+
+        </form>
+
+      </div>
+
     </div>
   }
 

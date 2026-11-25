@@ -95,9 +95,127 @@ intentoEnviarRegistro = false;
 
   usuariosProcesando: number[] = [];
 
+
+  // ==========================================
+// EDICIÓN DE USUARIO
+// ==========================================
+
+mostrarModalEdicion = false;
+
+usuarioEditando: UsuarioResponse | null = null;
+
+guardandoEdicion = false;
+
+errorEdicion = '';
+mensajeEdicion = '';
+
+nuevoUsuarioEdicion = {
+  username: '',
+  rol: '',
+  password: '',
+  confirmarPassword: '',
+  nombre: '',
+  apellido: '',
+  tipoDocumento: '',
+  numeroDocumento: '',
+  telefono: '',
+  fechaNacimiento: '',
+  genero: '',
+  correo: ''
+};
+
+codigoPaisEdicion = '+51';
+
+fotoEdicion: File | null = null;
+fotoPreviewEdicion: string | null = null;
+
+mostrarPasswordEdicion = false;
+
   ngOnInit(): void {
   this.cargarUsuarios();
   this.cargarEstudiantesSinCuenta();
+}
+
+// ==========================================
+// ABRIR MODAL DE EDICIÓN
+// ==========================================
+
+abrirEdicion(usuario: UsuarioResponse): void {
+
+  this.usuarioEditando = usuario;
+
+  this.errorEdicion = '';
+  this.mensajeEdicion = '';
+
+  this.fotoEdicion = null;
+  this.fotoPreviewEdicion = usuario.foto || null;
+
+  this.mostrarPasswordEdicion = false;
+
+  this.nuevoUsuarioEdicion = {
+    username: usuario.username || '',
+    rol: usuario.rol || '',
+    password: '',
+    confirmarPassword: '',
+    nombre: usuario.nombre || '',
+    apellido: usuario.apellido || '',
+    tipoDocumento: usuario.tipoDocumento || '',
+    numeroDocumento: usuario.numeroDocumento || '',
+    telefono: usuario.telefono || '',
+    fechaNacimiento: usuario.fechaNacimiento || '',
+    genero: usuario.genero || '',
+    correo: usuario.correo || ''
+  };
+
+  this.mostrarModalEdicion = true;
+
+  this.cdr.detectChanges();
+}
+
+// ==========================================
+// CERRAR MODAL DE EDICIÓN
+// ==========================================
+
+cerrarEdicion(): void {
+
+  if (this.guardandoEdicion) return;
+
+  this.mostrarModalEdicion = false;
+
+  this.usuarioEditando = null;
+
+  this.fotoEdicion = null;
+  this.fotoPreviewEdicion = null;
+
+  this.errorEdicion = '';
+  this.mensajeEdicion = '';
+
+  this.mostrarPasswordEdicion = false;
+}
+
+
+
+// ==========================================
+// SELECCIONAR FOTO PARA EDICIÓN
+// ==========================================
+
+seleccionarFotoEdicion(event: Event): void {
+
+  const input = event.target as HTMLInputElement;
+  const archivo = input.files?.[0];
+
+  if (!archivo) return;
+
+  this.fotoEdicion = archivo;
+
+  const lector = new FileReader();
+
+  lector.onload = () => {
+    this.fotoPreviewEdicion = lector.result as string;
+    this.cdr.detectChanges();
+  };
+
+  lector.readAsDataURL(archivo);
 }
 
 
