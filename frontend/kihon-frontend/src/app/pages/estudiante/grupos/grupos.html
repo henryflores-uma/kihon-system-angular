@@ -1,0 +1,164 @@
+<section class="student-groups">
+
+  <header class="student-groups__header">
+    <div>
+      <span class="student-groups__kicker">
+        ACADEMIA DE KARATE SUNKKU SINCHI
+      </span>
+
+      <h1>Mis grupos</h1>
+
+      <p>
+        Consulta los grupos en los que estás inscrito y sus horarios
+        de entrenamiento.
+      </p>
+    </div>
+
+    <span class="student-groups__date">
+      {{ formatToday() }}
+    </span>
+  </header>
+
+  @if (isLoading) {
+    <div class="student-groups__loading">
+      Cargando tus grupos...
+    </div>
+  }
+
+  @if (errorMessage) {
+    <div class="student-groups__alert" role="alert">
+      {{ errorMessage }}
+    </div>
+  }
+
+  @if (!isLoading && !errorMessage) {
+
+    <div class="student-groups__stats">
+
+      <article class="group-stat">
+        <span class="group-stat__icon">🥋</span>
+        <div>
+          <p>Mis grupos</p>
+          <strong>{{ grupos.length }}</strong>
+        </div>
+      </article>
+
+      <article class="group-stat">
+        <span class="group-stat__icon group-stat__icon--green">✓</span>
+        <div>
+          <p>Grupos activos</p>
+          <strong>{{ gruposActivos }}</strong>
+        </div>
+      </article>
+
+      <article class="group-stat">
+        <span class="group-stat__icon group-stat__icon--blue">◷</span>
+        <div>
+          <p>Horarios registrados</p>
+          <strong>{{ totalHorarios }}</strong>
+        </div>
+      </article>
+
+    </div>
+
+    <section class="student-groups__section">
+
+      <div class="section-heading">
+        <div>
+          <h2>Mis entrenamientos</h2>
+          <p>Información de tus grupos asignados.</p>
+        </div>
+
+        <span class="section-heading__count">
+          {{ grupos.length }} grupos
+        </span>
+      </div>
+
+      @if (grupos.length > 0) {
+
+        <div class="groups-grid">
+
+          @for (grupo of grupos; track grupo.id) {
+
+            <article class="group-card">
+
+              <div class="group-card__header">
+
+                <div class="group-card__icon">
+                  🥋
+                </div>
+
+                <span
+                  class="group-card__status"
+                  [class.group-card__status--inactive]="grupo.estado?.toUpperCase() !== 'ACTIVO'"
+                >
+                  {{ grupo.estado }}
+                </span>
+
+              </div>
+
+              <h3>{{ grupo.nombre }}</h3>
+
+              <p class="group-card__description">
+                {{ grupo.descripcion || 'Sin descripción disponible.' }}
+              </p>
+
+              <div class="group-card__schedule">
+
+                <div class="group-card__schedule-heading">
+                  <span>◷</span>
+                  <strong>Horarios de entrenamiento</strong>
+                </div>
+
+                @if (grupo.horarios?.length > 0) {
+
+                  @for (horario of grupo.horarios; track $index) {
+
+                    <div class="group-card__schedule-item">
+                      <span>{{ horario.diaSemana }}</span>
+
+                      <strong>
+                        {{ formatHora(horario.horaInicio) }}
+                        -
+                        {{ formatHora(horario.horaFin) }}
+                      </strong>
+                    </div>
+
+                  }
+
+                } @else {
+
+                  <p class="group-card__empty">
+                    No hay horarios registrados.
+                  </p>
+
+                }
+
+              </div>
+
+            </article>
+
+          }
+
+        </div>
+
+      } @else {
+
+        <article class="empty-state">
+          <div class="empty-state__icon">🥋</div>
+
+          <h3>No tienes grupos asignados</h3>
+
+          <p>
+            Actualmente no estás inscrito en ningún grupo.
+            Consulta con la administración de la academia.
+          </p>
+        </article>
+
+      }
+
+    </section>
+
+  }
+
+</section>

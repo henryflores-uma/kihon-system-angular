@@ -1,0 +1,111 @@
+
+<section class="student-attendance">
+
+  <header class="student-attendance__header">
+    <div>
+      <span class="student-attendance__kicker">PORTAL DEL ESTUDIANTE</span>
+      <h1>Mis asistencias</h1>
+      <p>Consulta tu historial de asistencia a los entrenamientos.</p>
+    </div>
+  </header>
+
+  @if (cargando) {
+    <div class="student-attendance__message">
+      Cargando tus asistencias...
+    </div>
+  } @else if (error) {
+    <div class="student-attendance__message student-attendance__message--error">
+      {{ error }}
+      <button (click)="cargarAsistencias()">Reintentar</button>
+    </div>
+  } @else {
+
+    <div class="attendance-stats">
+
+      <article class="attendance-stat">
+        <span class="attendance-stat__label">Total de registros</span>
+        <strong>{{ totalAsistencias }}</strong>
+      </article>
+
+      <article class="attendance-stat attendance-stat--present">
+        <span class="attendance-stat__label">Presentes</span>
+        <strong>{{ totalPresentes }}</strong>
+      </article>
+
+      <article class="attendance-stat attendance-stat--late">
+        <span class="attendance-stat__label">Tardanzas</span>
+        <strong>{{ totalTardanzas }}</strong>
+      </article>
+
+      <article class="attendance-stat attendance-stat--absent">
+        <span class="attendance-stat__label">Ausencias</span>
+        <strong>{{ totalAusencias }}</strong>
+      </article>
+
+      <article class="attendance-stat attendance-stat--justified">
+        <span class="attendance-stat__label">Justificadas</span>
+        <strong>{{ totalJustificadas }}</strong>
+      </article>
+
+    </div>
+
+    <section class="attendance-history">
+
+      <div class="attendance-history__header">
+        <div>
+          <h2>Historial de asistencia</h2>
+          <p>Registros de tus entrenamientos.</p>
+        </div>
+
+        <span class="attendance-history__count">
+          {{ totalAsistencias }} registros
+        </span>
+      </div>
+
+      @if (asistencias.length > 0) {
+
+        <div class="attendance-table-wrapper">
+          <table class="attendance-table">
+            <thead>
+              <tr>
+                <th>Fecha</th>
+                <th>Grupo</th>
+                <th>Hora de llegada</th>
+                <th>Estado</th>
+                <th>Observación</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              @for (asistencia of asistencias; track asistencia.id) {
+                <tr>
+                  <td>{{ formatFecha(asistencia.fecha) }}</td>
+                  <td>{{ asistencia.grupoNombre }}</td>
+                  <td>{{ formatHora(asistencia.horaLlegada) }}</td>
+                  <td>
+                    <span
+                      class="attendance-status"
+                      [ngClass]="getEstadoClass(asistencia.estado)"
+                    >
+                      {{ traducirEstado(asistencia.estado) }}
+                    </span>
+                  </td>
+                  <td>{{ asistencia.observacion || '—' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+      } @else {
+        <div class="attendance-empty">
+          <h3>Aún no tienes asistencias registradas</h3>
+          <p>Cuando se registren tus entrenamientos, aparecerán aquí.</p>
+        </div>
+      }
+
+    </section>
+
+  }
+
+</section>

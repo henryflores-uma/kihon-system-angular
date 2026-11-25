@@ -1,0 +1,125 @@
+
+<section class="student-schedule">
+
+  <header class="student-schedule__header">
+    <div>
+      <span class="student-schedule__kicker">PORTAL DEL ESTUDIANTE</span>
+      <h1>Mi horario</h1>
+      <p>Consulta los días y horarios de tus entrenamientos.</p>
+    </div>
+  </header>
+
+  @if (cargando) {
+
+    <div class="schedule-message">
+      Cargando tu horario...
+    </div>
+
+  } @else if (error) {
+
+    <div class="schedule-message schedule-message--error">
+      {{ error }}
+      <button (click)="cargarHorario()">Reintentar</button>
+    </div>
+
+  } @else {
+
+    <div class="schedule-stats">
+
+      <article class="schedule-stat">
+        <span>Grupos activos</span>
+        <strong>{{ totalGrupos }}</strong>
+      </article>
+
+      <article class="schedule-stat">
+        <span>Sesiones semanales</span>
+        <strong>{{ totalHorarios }}</strong>
+      </article>
+
+      <article class="schedule-stat">
+        <span>Días de entrenamiento</span>
+        <strong>{{ diasEntrenamiento }}</strong>
+      </article>
+
+    </div>
+
+    <section class="schedule-content">
+
+      <div class="schedule-content__header">
+        <div>
+          <h2>Mis entrenamientos</h2>
+          <p>Horarios correspondientes a tus grupos activos.</p>
+        </div>
+      </div>
+
+      @if (grupos.length > 0) {
+
+        <div class="schedule-groups">
+
+          @for (grupo of grupos; track grupo.id) {
+
+            <article class="schedule-group">
+
+              <div class="schedule-group__header">
+                <div>
+                  <span class="schedule-group__label">GRUPO</span>
+                  <h3>{{ grupo.nombre }}</h3>
+                </div>
+
+                <span class="schedule-group__status">
+                  Activo
+                </span>
+              </div>
+
+              @if (grupo.horarios && grupo.horarios.length > 0) {
+
+                <div class="schedule-list">
+
+                  @for (horario of ordenarHorarios(grupo); track $index) {
+
+                    <div class="schedule-item">
+
+                      <div class="schedule-item__day">
+                        <span>{{ formatDia(horario.diaSemana) }}</span>
+                      </div>
+
+                      <div class="schedule-item__time">
+                        <span>{{ formatHora(horario.horaInicio) }}</span>
+                        <span class="schedule-item__separator">—</span>
+                        <span>{{ formatHora(horario.horaFin) }}</span>
+                      </div>
+
+                    </div>
+
+                  }
+
+                </div>
+
+              } @else {
+
+                <p class="schedule-group__empty">
+                  Este grupo todavía no tiene horarios registrados.
+                </p>
+
+              }
+
+            </article>
+
+          }
+
+        </div>
+
+      } @else {
+
+        <div class="schedule-empty">
+          <h3>No tienes grupos activos</h3>
+          <p>Cuando estés inscrito en un grupo activo, tus horarios aparecerán aquí.</p>
+        </div>
+
+      }
+
+    </section>
+
+  }
+
+</section>

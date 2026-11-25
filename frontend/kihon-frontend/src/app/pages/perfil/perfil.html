@@ -1,0 +1,347 @@
+
+<section class="profile-page">
+
+  <!-- ENCABEZADO -->
+  <header class="profile-header">
+    <div>
+      <span class="profile-kicker">MI CUENTA</span>
+      <h1>Mi perfil</h1>
+      <p>Administra tu información personal y los datos de tu cuenta.</p>
+    </div>
+  </header>
+
+  <!-- CARGANDO -->
+  <div class="loading-container" *ngIf="loading">
+    <span class="loader"></span>
+    <p>Cargando información del perfil...</p>
+  </div>
+
+  <!-- CONTENIDO -->
+  <ng-container *ngIf="!loading && profile">
+
+    <!-- MENSAJES -->
+    <div class="alert alert-success" *ngIf="successMessage">
+      <span>✓</span>
+      {{ successMessage }}
+    </div>
+
+    <div class="alert alert-error" *ngIf="errorMessage">
+      <span>!</span>
+      {{ errorMessage }}
+    </div>
+
+    <div class="profile-grid">
+
+      <!-- COLUMNA PRINCIPAL -->
+      <div class="profile-main">
+
+        <!-- INFORMACIÓN PERSONAL -->
+        <article class="profile-card">
+
+          <div class="card-heading">
+            <div>
+              <span class="section-label">INFORMACIÓN</span>
+              <h2>Datos de la cuenta</h2>
+              <p>Actualiza tus datos de acceso y contacto.</p>
+            </div>
+          </div>
+
+          <!-- FOTO -->
+          <div class="photo-section">
+
+            <div class="avatar-wrapper">
+
+              <img
+                *ngIf="photoPreview"
+                [src]="photoPreview"
+                alt="Foto de perfil"
+                class="profile-avatar">
+
+              <div
+                *ngIf="!photoPreview"
+                class="profile-avatar avatar-placeholder">
+                {{ avatarInitial }}
+              </div>
+
+            </div>
+
+            <div class="photo-info">
+              <h3>Fotografía de perfil</h3>
+              <p>JPG, PNG o WEBP. Tamaño máximo de 5 MB.</p>
+
+              <label class="photo-button">
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  (change)="onPhotoSelected($event)">
+                <span>Seleccionar fotografía</span>
+              </label>
+            </div>
+
+          </div>
+
+          <div class="section-divider"></div>
+
+          <!-- FORMULARIO -->
+          <form [formGroup]="profileForm" (ngSubmit)="saveProfile()">
+
+            <div class="form-grid">
+
+              <div class="form-field">
+                <label for="username">Nombre de usuario</label>
+                <input
+                  id="username"
+                  type="text"
+                  formControlName="username"
+                  placeholder="Nombre de usuario">
+
+                <small class="field-error" *ngIf="hasProfileError('username')">
+                  Usuario obligatorio, entre 4 y 30 caracteres.
+                  Solo letras, números, puntos, guiones y guion bajo.
+                </small>
+              </div>
+
+              <div class="form-field">
+                <label for="correo">Correo electrónico</label>
+                <input
+                  id="correo"
+                  type="email"
+                  formControlName="correo"
+                  placeholder="correo@ejemplo.com">
+
+                <small class="field-error" *ngIf="hasProfileError('correo')">
+                  Introduce un correo electrónico válido.
+                </small>
+              </div>
+
+              <div class="form-field">
+                <label for="nombre">Nombres</label>
+                <input
+                  id="nombre"
+                  type="text"
+                  formControlName="nombre"
+                  placeholder="Tus nombres">
+
+                <small class="field-error" *ngIf="hasProfileError('nombre')">
+                  Introduce un nombre válido.
+                </small>
+              </div>
+
+              <div class="form-field">
+                <label for="apellido">Apellidos</label>
+                <input
+                  id="apellido"
+                  type="text"
+                  formControlName="apellido"
+                  placeholder="Tus apellidos">
+
+                <small class="field-error" *ngIf="hasProfileError('apellido')">
+                  Introduce apellidos válidos.
+                </small>
+              </div>
+
+            </div>
+
+            <div class="form-actions">
+              <button
+                type="submit"
+                class="btn-primary"
+                [disabled]="saving">
+
+                {{ saving ? 'Guardando...' : 'Guardar cambios' }}
+
+              </button>
+            </div>
+
+          </form>
+
+        </article>
+
+        <!-- DATOS PERSONALES -->
+        <article class="profile-card">
+
+          <div class="card-heading">
+            <div>
+              <span class="section-label">DATOS PERSONALES</span>
+              <h2>Información registrada</h2>
+              <p>Estos datos son administrados por la academia.</p>
+            </div>
+            <span class="readonly-label">Solo lectura</span>
+          </div>
+
+          <div class="readonly-grid">
+
+            <div class="readonly-field">
+              <span>Tipo de documento</span>
+              <strong>{{ profile.tipoDocumento || 'No registrado' }}</strong>
+            </div>
+
+            <div class="readonly-field">
+              <span>Número de documento</span>
+              <strong>{{ profile.numeroDocumento || 'No registrado' }}</strong>
+            </div>
+
+            <div class="readonly-field">
+              <span>Teléfono</span>
+              <strong>{{ profile.telefono || 'No registrado' }}</strong>
+            </div>
+
+            <div class="readonly-field">
+              <span>Fecha de nacimiento</span>
+              <strong>{{ profile.fechaNacimiento || 'No registrado' }}</strong>
+            </div>
+
+            <div class="readonly-field">
+              <span>Género</span>
+              <strong>{{ profile.genero || 'No registrado' }}</strong>
+            </div>
+
+          </div>
+
+        </article>
+
+      </div>
+
+      <!-- COLUMNA LATERAL -->
+      <aside class="profile-sidebar">
+
+        <!-- RESUMEN DE CUENTA -->
+        <article class="profile-card account-card">
+
+          <span class="section-label">CUENTA</span>
+
+          <div class="account-avatar">
+            <img
+              *ngIf="photoPreview"
+              [src]="photoPreview"
+              alt="Foto de perfil">
+
+            <span *ngIf="!photoPreview">
+              {{ avatarInitial }}
+            </span>
+          </div>
+
+          <h2>{{ profile.nombre }} {{ profile.apellido }}</h2>
+          <p class="account-username">@{{ profile.username }}</p>
+
+          <div class="account-details">
+
+            <div>
+              <span>Rol</span>
+              <strong>{{ profile.rol }}</strong>
+            </div>
+
+            <div>
+              <span>Estado</span>
+              <strong>{{ profile.estado }}</strong>
+            </div>
+
+            <div>
+              <span>ID de usuario</span>
+              <strong>#{{ profile.id }}</strong>
+            </div>
+
+          </div>
+
+          <div class="account-note">
+            <span>i</span>
+            Tu rol y estado son administrados por la academia.
+          </div>
+
+        </article>
+
+        <!-- CAMBIAR CONTRASEÑA -->
+        <article class="profile-card password-card">
+
+          <span class="section-label">SEGURIDAD</span>
+          <h2>Cambiar contraseña</h2>
+          <p>Protege tu cuenta utilizando una contraseña segura.</p>
+
+          <div class="alert alert-success" *ngIf="passwordSuccessMessage">
+            {{ passwordSuccessMessage }}
+          </div>
+
+          <div class="alert alert-error" *ngIf="passwordErrorMessage">
+            {{ passwordErrorMessage }}
+          </div>
+
+          <form
+            [formGroup]="passwordForm"
+            (ngSubmit)="changePassword()">
+
+            <div class="form-field">
+              <label for="passwordActual">Contraseña actual</label>
+              <input
+                id="passwordActual"
+                type="password"
+                formControlName="passwordActual"
+                autocomplete="current-password">
+
+              <small class="field-error"
+                *ngIf="hasPasswordError('passwordActual')">
+                Introduce tu contraseña actual.
+              </small>
+            </div>
+
+            <div class="form-field">
+              <label for="passwordNueva">Nueva contraseña</label>
+              <input
+                id="passwordNueva"
+                type="password"
+                formControlName="passwordNueva"
+                autocomplete="new-password">
+
+              <small class="field-hint">
+                Entre 8 y 72 caracteres.
+              </small>
+
+              <small class="field-error"
+                *ngIf="hasPasswordError('passwordNueva')">
+                La contraseña debe tener entre 8 y 72 caracteres.
+              </small>
+            </div>
+
+            <div class="form-field">
+              <label for="confirmarPassword">Confirmar contraseña</label>
+              <input
+                id="confirmarPassword"
+                type="password"
+                formControlName="confirmarPassword"
+                autocomplete="new-password">
+
+              <small class="field-error"
+                *ngIf="hasPasswordError('confirmarPassword')">
+                Confirma tu nueva contraseña.
+              </small>
+            </div>
+
+            <button
+              type="submit"
+              class="btn-primary btn-full"
+              [disabled]="changingPassword">
+
+              {{ changingPassword ? 'Actualizando...' : 'Actualizar contraseña' }}
+
+            </button>
+
+          </form>
+
+        </article>
+
+      </aside>
+
+    </div>
+
+  </ng-container>
+
+  <!-- ERROR DE CARGA -->
+  <div class="load-error" *ngIf="!loading && !profile">
+    <h2>No se pudo cargar tu perfil</h2>
+    <p>{{ errorMessage }}</p>
+
+    <button class="btn-primary" (click)="loadProfile()">
+      Intentar nuevamente
+    </button>
+  </div>
+
+</section>
