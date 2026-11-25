@@ -97,6 +97,17 @@ intentoEnviarRegistro = false;
 
 
   // ==========================================
+// MODAL DE CONFIRMACIÓN DE ELIMINACIÓN
+// ==========================================
+
+usuarioPendienteEliminar: UsuarioResponse | null = null;
+
+eliminandoUsuario = false;
+
+errorEliminacion = '';
+
+
+  // ==========================================
 // EDICIÓN DE USUARIO
 // ==========================================
 
@@ -167,9 +178,27 @@ abrirEdicion(usuario: UsuarioResponse): void {
     correo: usuario.correo || ''
   };
 
+  this.separarTelefonoEdicion(usuario.telefono);
+
   this.mostrarModalEdicion = true;
 
   this.cdr.detectChanges();
+}
+
+private separarTelefonoEdicion(telefono: string | null): void {
+  const valor = (telefono || '').trim();
+
+  const codigos = ['+51', '+57', '+56', '+54', '+55'];
+
+  const codigoEncontrado = codigos.find(codigo =>
+    valor.startsWith(codigo)
+  );
+
+  this.codigoPaisEdicion = codigoEncontrado || '+51';
+
+  this.nuevoUsuarioEdicion.telefono = codigoEncontrado
+    ? valor.substring(codigoEncontrado.length).replace(/\D/g, '')
+    : valor.replace(/\D/g, '');
 }
 
 // ==========================================
@@ -218,7 +247,114 @@ seleccionarFotoEdicion(event: Event): void {
   lector.readAsDataURL(archivo);
 }
 
+// ==========================================
+// GUARDAR EDICIÓN DE USUARIO
+// ==========================================
 
+guardarEdicion(): void {
+
+  if (!this.usuarioEditando || this.guardandoEdicion) {
+    return;
+  }
+
+  this.errorEdicion = '';
+  this.mensajeEdicion = '';
+
+  // Comprobar que las contraseñas coincidan
+  const password = this.nuevoUsuarioEdicion.password;
+
+  if (
+    password &&
+    password !== this.nuevoUsuarioEdicion.confirmarPassword
+  ) {
+    this.errorEdicion = 'Las contraseñas no coinciden.';
+    return;
+  }
+
+  this.guardandoEdicion = true;
+
+  const datos = new FormData();
+
+  // Datos de acceso
+  datos.append('username', this.nuevoUsuarioEdicion.username.trim());
+  datos.append('rol', this.nuevoUsuarioEdicion.rol);
+
+  // Solo enviar contraseña si se desea cambiar
+  if (password && password.trim() !== '') {
+    datos.append('password', password);
+  }
+
+  // Datos personales
+  datos.append('nombre', this.nuevoUsuarioEdicion.nombre.trim());
+  datos.append('apellido', this.nuevoUsuarioEdicion.apellido.trim());
+  datos.append('tipoDocumento', this.nuevoUsuarioEdicion.tipoDocumento);
+  datos.append('numeroDocumento', this.nuevoUsuarioEdicion.numeroDocumento.trim());
+
+  // Código de país + número telefónico
+  const telefonoCompleto =
+    this.codigoPaisEdicion + this.nuevoUsuarioEdicion.telefono.trim();
+
+  datos.append('telefono', telefonoCompleto);
+
+  datos.append(
+    'fechaNacimiento',
+    this.nuevoUsuarioEdicion.fechaNacimiento
+  );
+
+  datos.append('genero', this.nuevoUsuarioEdicion.genero);
+  datos.append('correo', this.nuevoUsuarioEdicion.correo.trim());
+
+  // Fotografía opcional
+  if (this.fotoEdicion) {
+    datos.append('foto', this.fotoEdicion);
+  }
+
+  const usuarioId = this.usuarioEditando.id;
+
+  this.usuarioService.actualizar(usuarioId, datos).subscribe({
+
+    next: (respuesta) => {
+
+      // Actualizar usuario en la lista
+      this.usuarios = this.usuarios.map(usuario =>
+        usuario.id === respuesta.id ? respuesta : usuario
+      );
+
+      // Actualizar tabla y filtros
+      this.aplicarFiltros();
+
+      this.guardandoEdicion = false;
+
+      // Cerrar modal
+      this.cerrarEdicion();
+
+      this.mensajeAccion = 'Usuario actualizado correctamente.';
+      this.errorAccion = '';
+
+      this.cdr.detectChanges();
+    },
+
+    error: (err: HttpErrorResponse) => {
+
+  console.error('ERROR AL ACTUALIZAR USUARIO');
+  console.error('Estado HTTP:', err.status);
+  console.error('Respuesta del servidor:', err.error);
+  console.error('Mensaje:', err.message);
+
+  this.errorEdicion =
+    typeof err.error === 'string'
+      ? err.error
+      : err.error?.message ||
+        err.error?.error ||
+        'No se pudieron guardar los cambios del usuario.';
+
+  this.guardandoEdicion = false;
+
+  this.cdr.detectChanges();
+}
+
+  });
+}
 
 
   // ==========================================
@@ -356,6 +492,97 @@ cambiarEstadoUsuario(usuario: UsuarioResponse): void {
 
   });
 }
+
+
+// ==========================================
+// ABRIR CONFIRMACIÓN DE ELIMINACIÓN
+// ==========================================
+
+eliminarUsuario(usuario: UsuarioResponse): void {
+
+  if (this.usuariosProcesando.includes(usuario.id)) {
+    return;
+  }
+
+  this.usuarioPendienteEliminar = usuario;
+  this.errorEliminacion = '';
+}
+
+
+// ==========================================
+// CANCELAR ELIMINACIÓN
+// ==========================================
+
+cancelarEliminacion(): void {
+
+  if (this.eliminandoUsuario) return;
+
+  this.usuarioPendienteEliminar = null;
+  this.errorEliminacion = '';
+}
+
+
+// ==========================================
+// CONFIRMAR ELIMINACIÓN
+// ==========================================
+
+confirmarEliminacion(): void {
+
+  const usuario = this.usuarioPendienteEliminar;
+
+  if (!usuario || this.eliminandoUsuario) return;
+
+  this.errorEliminacion = '';
+  this.mensajeAccion = '';
+  this.errorAccion = '';
+
+  this.eliminandoUsuario = true;
+  this.usuariosProcesando.push(usuario.id);
+
+  this.usuarioService.eliminar(usuario.id).subscribe({
+
+    next: () => {
+
+      this.usuarios = this.usuarios.filter(
+        u => u.id !== usuario.id
+      );
+
+      this.aplicarFiltros();
+
+      this.actualizarEstudiantesSinCuenta();
+
+      this.mensajeAccion = 'Usuario eliminado correctamente.';
+
+      this.usuarioPendienteEliminar = null;
+      this.eliminandoUsuario = false;
+
+      this.usuariosProcesando =
+        this.usuariosProcesando.filter(id => id !== usuario.id);
+
+      this.cdr.detectChanges();
+    },
+
+    error: (err: HttpErrorResponse) => {
+
+      console.error('Error al eliminar usuario:', err);
+
+      this.errorEliminacion =
+        err.error?.message ||
+        'No se pudo eliminar el usuario.';
+
+      this.eliminandoUsuario = false;
+
+      this.usuariosProcesando =
+        this.usuariosProcesando.filter(id => id !== usuario.id);
+
+      this.cdr.detectChanges();
+    }
+
+  });
+}
+
+  
+
 
   // ==========================================
   // APLICAR FILTROS

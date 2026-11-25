@@ -1,0 +1,542 @@
+
+<section class="schedule-page">
+
+  <header class="page-header">
+    <div>
+      <span class="page-kicker">ADMINISTRACIÓN</span>
+      <h1>Horario</h1>
+      <p>Consulta y administra el calendario general de la academia.</p>
+    </div>
+  </header>
+
+  @if (mensajeExito) {
+    <div class="alert alert-success">
+      <span>✓</span>
+      {{ mensajeExito }}
+      <button type="button" (click)="mensajeExito = ''">×</button>
+    </div>
+  }
+
+  @if (error) {
+    <div class="alert alert-error">
+      {{ error }}
+      <button type="button" (click)="error = ''">×</button>
+    </div>
+  }
+
+  <!-- NAVEGACIÓN DEL CALENDARIO -->
+
+  <section class="calendar-toolbar">
+
+    <div class="calendar-navigation">
+      <button
+        type="button"
+        class="btn-arrow"
+        (click)="cambiarSemana(-1)"
+        aria-label="Semana anterior">
+        ‹
+      </button>
+
+      <strong>{{ tituloSemana }}</strong>
+
+      <button
+        type="button"
+        class="btn-arrow"
+        (click)="cambiarSemana(1)"
+        aria-label="Semana siguiente">
+        ›
+      </button>
+    </div>
+
+    <div class="toolbar-actions">
+
+      <button
+        type="button"
+        class="btn-today"
+        (click)="irHoy()">
+        Hoy
+      </button>
+
+      <button
+        type="button"
+        class="btn-primary"
+        (click)="abrirNuevoEvento()">
+        + Agregar evento
+      </button>
+
+    </div>
+
+  </section>
+
+  <!-- ESTADÍSTICAS -->
+
+  <section class="schedule-summary">
+
+    <article>
+      <span>Grupos activos</span>
+      <strong>{{ grupos.length }}</strong>
+    </article>
+
+    <article>
+      <span>Horarios semanales</span>
+      <strong>{{ horarios.length }}</strong>
+    </article>
+
+    <article>
+      <span>Eventos de esta semana</span>
+      <strong>{{ totalEventos }}</strong>
+    </article>
+
+  </section>
+
+  <!-- CALENDARIO -->
+
+  <section class="calendar-card">
+
+    @if (cargando) {
+
+      <div class="loading-state">
+        Cargando calendario...
+      </div>
+
+    } @else {
+
+      <div class="calendar-scroll">
+
+        <div class="calendar-grid">
+
+          <!-- ESQUINA SUPERIOR -->
+
+          <div class="calendar-corner"></div>
+
+          <!-- ENCABEZADOS DE LOS DÍAS -->
+
+          @for (dia of dias; track dia.fecha; let i = $index) {
+
+            <div
+              class="day-header"
+              [class.day-header--today]="dia.esHoy"
+              [style.grid-column]="i + 2">
+
+              <span>{{ formatDia(dia.nombre) }}</span>
+              <strong>{{ dia.numero }}</strong>
+
+            </div>
+
+          }
+
+          <!-- EJE DE HORAS -->
+
+          <div class="time-axis">
+
+            @for (hora of horasCalendario; track hora) {
+
+              <div class="time-label">
+                {{ hora.toString().padStart(2, '0') }}:00
+              </div>
+
+            }
+
+          </div>
+
+          <!-- COLUMNAS DE CADA DÍA -->
+
+          @for (dia of dias; track dia.fecha; let i = $index) {
+
+            <div
+              class="day-body"
+              [class.day-body--today]="dia.esHoy"
+              [style.grid-column]="i + 2">
+
+              <!-- ENTRENAMIENTOS DE GRUPOS -->
+
+              @for (
+                horario of horariosDelDia(dia);
+                track horario.id
+              ) {
+
+                <article
+                  class="calendar-event group-event"
+                  [style.top.px]="posicionTop(horario.horaInicio)"
+                  [style.height.px]="alturaTarjeta(
+                    horario.horaInicio,
+                    horario.horaFin
+                  )">
+
+                  <strong>{{ horario.grupoNombre }}</strong>
+
+                  <span>
+                    {{ formatHora(horario.horaInicio) }}
+                    - 
+                    {{ formatHora(horario.horaFin) }}
+                  </span>
+
+                  <small>{{ horario.senseiNombre || 'Sin sensei' }}</small>
+
+                </article>
+
+              }
+
+              <!-- EVENTOS DE LA ACADEMIA -->
+
+              @for (
+                evento of eventosDelDia(dia);
+                track evento.id
+              ) {
+
+                <article
+                  class="calendar-event academy-event"
+                  [class.event-cancelled]="evento.estado === 'CANCELADO'"
+                  [style.top.px]="posicionTop(evento.horaInicio)"
+                  [style.height.px]="alturaTarjeta(
+                    evento.horaInicio,
+                    evento.horaFin
+                  )"
+                  (click)="abrirEditarEvento(evento)"
+                  role="button"
+                  tabindex="0"
+                  (keydown.enter)="abrirEditarEvento(evento)">
+
+                  <strong>{{ evento.titulo }}</strong>
+
+                  <span>
+                    {{ formatHora(evento.horaInicio) }}
+                    -
+                    {{ formatHora(evento.horaFin) }}
+                  </span>
+
+                  <small>{{ evento.tipo }}</small>
+
+                  @if (evento.estado === 'CANCELADO') {
+                    <small>Cancelado</small>
+                  }
+
+                </article>
+
+              }
+
+            </div>
+
+          }
+
+        </div>
+
+      </div>
+
+      @if (cargandoEventos) {
+        <div class="calendar-loading">
+          Actualizando eventos...
+        </div>
+      }
+
+    }
+
+  </section>
+
+  <!-- LEYENDA -->
+
+  <div class="calendar-legend">
+
+    <span>
+      <i class="legend-group"></i>
+      Entrenamientos
+    </span>
+
+    <span>
+      <i class="legend-event"></i>
+      Eventos de la academia
+    </span>
+
+    <span>
+      <i class="legend-cancelled"></i>
+      Eventos cancelados
+    </span>
+
+  </div>
+
+  <!-- MODAL REGISTRAR / EDITAR EVENTO -->
+
+  @if (mostrarModal) {
+
+    <div
+      class="modal-overlay"
+      (click)="cerrarModal()">
+
+      <section
+        class="event-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="event-modal-title"
+        (click)="$event.stopPropagation()">
+
+        <header class="modal-header">
+
+          <div>
+            <span class="page-kicker">GESTIÓN DE EVENTOS</span>
+
+            <h2 id="event-modal-title">
+              {{ eventoEditando ? 'Editar evento' : 'Nuevo evento' }}
+            </h2>
+
+            <p>
+              Completa la información del evento de la academia.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            class="modal-close"
+            (click)="cerrarModal()">
+            ×
+          </button>
+
+        </header>
+
+        <form
+          class="event-form"
+          (ngSubmit)="guardarEvento()">
+
+          <div class="form-group">
+
+            <label for="titulo">Título del evento *</label>
+
+            <input
+              id="titulo"
+              type="text"
+              name="titulo"
+              [(ngModel)]="formulario.titulo"
+              placeholder="Ej. Examen de cinturones"
+              maxlength="150"
+              required />
+
+          </div>
+
+          <div class="form-row">
+
+            <div class="form-group">
+
+              <label for="tipo">Tipo de evento *</label>
+
+              <select
+                id="tipo"
+                name="tipo"
+                [(ngModel)]="formulario.tipo"
+                required>
+
+                <option value="">Selecciona un tipo</option>
+
+                @for (tipo of tiposEvento; track tipo.id) {
+                  <option [value]="tipo.nombre">
+                    {{ tipo.nombre }}
+                  </option>
+                }
+
+              </select>
+
+            </div>
+
+            <div class="form-group">
+
+              <label for="fecha">Fecha *</label>
+
+              <input
+                id="fecha"
+                type="date"
+                name="fecha"
+                [(ngModel)]="formulario.fecha"
+                required />
+
+            </div>
+
+          </div>
+
+          <div class="form-row">
+
+            <div class="form-group">
+
+              <label for="horaInicio">Hora de inicio *</label>
+
+              <input
+                id="horaInicio"
+                type="time"
+                name="horaInicio"
+                [(ngModel)]="formulario.horaInicio"
+                required />
+
+            </div>
+
+            <div class="form-group">
+
+              <label for="horaFin">Hora de finalización *</label>
+
+              <input
+                id="horaFin"
+                type="time"
+                name="horaFin"
+                [(ngModel)]="formulario.horaFin"
+                required />
+
+            </div>
+
+          </div>
+
+          <div class="form-group">
+
+            <label for="lugar">Lugar</label>
+
+            <input
+              id="lugar"
+              type="text"
+              name="lugar"
+              [(ngModel)]="formulario.lugar"
+              placeholder="Lugar donde se realizará el evento" />
+
+          </div>
+
+          <div class="form-group">
+
+            <label for="responsable">Responsable</label>
+
+            <select
+              id="responsable"
+              name="responsable"
+              [(ngModel)]="formulario.responsableId">
+
+              <option [ngValue]="null">
+                Sin responsable asignado
+              </option>
+
+              @for (usuario of responsables; track usuario.id) {
+
+                <option [ngValue]="usuario.id">
+                  {{ usuario.nombre }} {{ usuario.apellido }}
+                </option>
+
+              }
+
+            </select>
+
+          </div>
+
+          <div class="form-group">
+
+            <label for="descripcion">Descripción</label>
+
+            <textarea
+              id="descripcion"
+              name="descripcion"
+              [(ngModel)]="formulario.descripcion"
+              rows="3"
+              placeholder="Información adicional del evento">
+            </textarea>
+
+          </div>
+
+          @if (error) {
+            <div class="form-error">
+              {{ error }}
+            </div>
+          }
+
+          <footer class="modal-footer">
+
+            @if (eventoEditando) {
+
+              <button
+                type="button"
+                class="btn-delete"
+                (click)="confirmarEliminar(eventoEditando)">
+                Eliminar
+              </button>
+
+              <button
+                type="button"
+                class="btn-cancel"
+                (click)="cambiarEstadoEvento(eventoEditando)">
+                {{ eventoEditando.estado === 'ACTIVO'
+                  ? 'Cancelar evento'
+                  : 'Reactivar evento' }}
+              </button>
+
+            }
+
+            <button
+              type="button"
+              class="btn-cancel"
+              (click)="cerrarModal()"
+              [disabled]="guardando">
+              Cerrar
+            </button>
+
+            <button
+              type="submit"
+              class="btn-primary"
+              [disabled]="guardando">
+
+              {{ guardando
+                ? 'Guardando...'
+                : eventoEditando
+                  ? 'Guardar cambios'
+                  : 'Registrar evento' }}
+
+            </button>
+
+          </footer>
+
+        </form>
+
+      </section>
+
+    </div>
+
+  }
+
+  <!-- MODAL DE CONFIRMACIÓN DE ELIMINACIÓN -->
+
+  @if (mostrarModalEliminar && eventoEliminar) {
+
+    <div
+      class="modal-overlay"
+      (click)="cerrarModalEliminar()">
+
+      <section
+        class="confirm-modal"
+        role="dialog"
+        aria-modal="true"
+        (click)="$event.stopPropagation()">
+
+        <div class="confirm-icon">!</div>
+
+        <h2>¿Eliminar evento?</h2>
+
+        <p>
+          ¿Estás seguro de eliminar
+          <strong>{{ eventoEliminar.titulo }}</strong>?
+          Esta acción no se puede deshacer.
+        </p>
+
+        <footer class="modal-footer">
+
+          <button
+            type="button"
+            class="btn-cancel"
+            (click)="cerrarModalEliminar()">
+            Volver
+          </button>
+
+          <button
+            type="button"
+            class="btn-delete"
+            (click)="eliminarEvento()">
+            Sí, eliminar
+          </button>
+
+        </footer>
+
+      </section>
+
+    </div>
+
+  }
+
+</section>

@@ -262,6 +262,17 @@
     }
   </button>
 
+  <!-- ELIMINAR -->
+<button
+  type="button"
+  class="btn-action btn-delete"
+  title="Eliminar usuario"
+  [disabled]="usuariosProcesando.includes(usuario.id)"
+  (click)="eliminarUsuario(usuario)"
+>
+  Eliminar
+</button>
+
 </td>
 
               </tr>
@@ -1034,12 +1045,13 @@
 
             <!-- Conectaremos el guardado en el siguiente paso -->
             <button
-              type="button"
-              class="btn-primary"
-              disabled
-            >
-              Guardar cambios
-            </button>
+  type="button"
+  class="btn-primary"
+  (click)="guardarEdicion()"
+  [disabled]="guardandoEdicion"
+>
+  {{ guardandoEdicion ? 'Guardando...' : 'Guardar cambios' }}
+</button>
 
           </footer>
 
@@ -1050,4 +1062,86 @@
     </div>
   }
 
+
+  <!-- ========================================== -->
+<!-- MODAL CONFIRMAR ELIMINACIÓN -->
+<!-- ========================================== -->
+
+@if (usuarioPendienteEliminar) {
+
+  <div
+    class="delete-modal-overlay"
+    (click)="cancelarEliminacion()"
+  >
+
+    <div
+      class="delete-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="tituloEliminarUsuario"
+      (click)="$event.stopPropagation()"
+    >
+
+      <div class="delete-modal__icon">
+        <span>!</span>
+      </div>
+
+      <div class="delete-modal__content">
+
+        <span class="section-kicker">
+          ADMINISTRACIÓN
+        </span>
+
+        <h2 id="tituloEliminarUsuario">
+          ¿Eliminar usuario?
+        </h2>
+
+        <p>
+          ¿Estás seguro de que deseas eliminar a
+          <strong>
+            {{ usuarioPendienteEliminar.nombre }}
+            {{ usuarioPendienteEliminar.apellido }}
+          </strong>
+          del sistema?
+        </p>
+
+        <small>
+          Esta acción no se puede deshacer.
+        </small>
+
+      </div>
+
+      @if (errorEliminacion) {
+        <div class="delete-modal__error" role="alert">
+          {{ errorEliminacion }}
+        </div>
+      }
+
+      <footer class="delete-modal__footer">
+
+        <button
+          type="button"
+          class="delete-btn-cancel"
+          (click)="cancelarEliminacion()"
+          [disabled]="eliminandoUsuario"
+        >
+          Cancelar
+        </button>
+
+        <button
+          type="button"
+          class="delete-btn-confirm"
+          (click)="confirmarEliminacion()"
+          [disabled]="eliminandoUsuario"
+        >
+          {{ eliminandoUsuario ? 'Eliminando...' : 'Eliminar usuario' }}
+        </button>
+
+      </footer>
+
+    </div>
+
+  </div>
+
+}
 </section>

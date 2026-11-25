@@ -56,6 +56,28 @@ export const routes: Routes = [
           import('./pages/perfil/perfil')
             .then(m => m.Perfil),
       },
+
+      {
+  path: 'asistencias',
+  loadComponent: () =>
+    import('./pages/admin/asistencias/asistencias')
+      .then(m => m.Asistencias),
+},
+
+{
+  path: 'horario',
+  loadComponent: () =>
+    import('./pages/admin/horario/horario')
+      .then(m => m.Horario),
+},
+
+{
+  path: 'inscripciones',
+  loadComponent: () =>
+    import('./pages/admin/inscripciones/inscripciones')
+      .then(m => m.Inscripciones),
+},
+
       {
         path: '',
         redirectTo: 'admin',

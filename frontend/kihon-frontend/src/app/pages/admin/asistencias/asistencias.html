@@ -1,0 +1,536 @@
+<section class="attendance-page">
+
+  <header class="page-header">
+    <div>
+      <span class="page-kicker">ADMINISTRACIÓN KIHON</span>
+      <h1>Control de asistencias</h1>
+      <p>Gestiona y consulta la asistencia de los estudiantes.</p>
+    </div>
+
+    <div class="header-date">
+      <span>FECHA ACTUAL</span>
+      <strong>{{ fechaSeleccionada }}</strong>
+    </div>
+  </header>
+
+  <!-- NAVEGACIÓN -->
+
+  <nav class="attendance-tabs">
+
+    <button
+      type="button"
+      [class.active]="apartado === 'registro'"
+      (click)="cambiarApartado('registro')"
+    >
+      <span class="tab-icon">✓</span>
+      Registrar asistencia
+    </button>
+
+    <button
+      type="button"
+      [class.active]="apartado === 'consulta'"
+      (click)="cambiarApartado('consulta')"
+    >
+      <span class="tab-icon">⌕</span>
+      Consultar asistencias
+    </button>
+
+  </nav>
+
+  <!-- ===================================== -->
+  <!-- REGISTRAR ASISTENCIA -->
+  <!-- ===================================== -->
+
+  @if (apartado === 'registro') {
+
+    <section class="filter-card">
+
+      <div class="filter-heading">
+        <div>
+          <span class="section-kicker">REGISTRO DIARIO</span>
+          <h2>Seleccionar clase</h2>
+          <p>Los grupos se filtran automáticamente según el día seleccionado.</p>
+        </div>
+      </div>
+
+      <div class="filter-grid">
+
+        <div class="form-group">
+          <label for="fechaRegistro">Fecha de asistencia</label>
+
+          <input
+            id="fechaRegistro"
+            type="date"
+            [(ngModel)]="fechaSeleccionada"
+            (ngModelChange)="cambiarFecha()"
+          />
+
+          <small>{{ obtenerNombreDia(fechaSeleccionada) }}</small>
+        </div>
+
+        <div class="form-group">
+          <label for="grupoRegistro">Grupo disponible</label>
+
+          <select
+            id="grupoRegistro"
+            [(ngModel)]="grupoSeleccionado"
+            [disabled]="cargandoGrupos || !gruposDisponibles.length"
+          >
+            <option [ngValue]="null">Seleccionar grupo</option>
+
+            @for (grupo of gruposDisponibles; track grupo.id) {
+              <option [ngValue]="grupo.id">
+                {{ grupo.nombre }}
+              </option>
+            }
+          </select>
+        </div>
+
+        <button
+          type="button"
+          class="btn-primary"
+          (click)="consultarAsistencias()"
+          [disabled]="cargandoEstudiantes || cargandoGrupos || !grupoSeleccionado"
+        >
+          {{ cargandoEstudiantes ? 'Consultando...' : 'Cargar estudiantes' }}
+        </button>
+
+      </div>
+
+      @if (!cargandoGrupos && !gruposDisponibles.length) {
+        <div class="no-groups">
+          <strong>No hay clases programadas.</strong>
+          <span>No existen grupos activos con horario para este día.</span>
+        </div>
+      }
+
+    </section>
+
+    @if (error) {
+      <div class="alert alert-error" role="alert">
+        {{ error }}
+      </div>
+    }
+
+    @if (mensajeExito) {
+      <div class="alert alert-success" role="status">
+        {{ mensajeExito }}
+      </div>
+    }
+
+    @if (estudiantes.length > 0) {
+
+      <section class="stats-grid">
+
+        <article class="stat-card">
+          <span class="stat-label">Estudiantes</span>
+          <strong>{{ totalEstudiantes }}</strong>
+          <span class="stat-description">Inscritos activos</span>
+        </article>
+
+        <article class="stat-card stat-present">
+          <span class="stat-label">Presentes</span>
+          <strong>{{ totalPresentes }}</strong>
+          <span class="stat-description">Asistieron a clase</span>
+        </article>
+
+        <article class="stat-card stat-late">
+          <span class="stat-label">Tardanzas</span>
+          <strong>{{ totalTardanzas }}</strong>
+          <span class="stat-description">Llegaron tarde</span>
+        </article>
+
+        <article class="stat-card stat-absent">
+          <span class="stat-label">Ausentes</span>
+          <strong>{{ totalFaltas }}</strong>
+          <span class="stat-description">No asistieron</span>
+        </article>
+
+      </section>
+
+      <section class="attendance-progress">
+
+        <div class="progress-heading">
+          <span>Porcentaje de asistencia</span>
+          <strong>{{ porcentajeAsistencia }}%</strong>
+        </div>
+
+        <div class="progress-track">
+          <div
+            class="progress-fill"
+            [style.width.%]="porcentajeAsistencia"
+          ></div>
+        </div>
+
+        <div class="progress-footer">
+          {{ totalRegistrados }} de {{ totalEstudiantes }} registros guardados
+        </div>
+
+      </section>
+
+      <section class="table-card">
+
+        <div class="table-header">
+
+          <div>
+            <span class="section-kicker">CONTROL DE CLASE</span>
+            <h2>Lista de estudiantes</h2>
+            <p>Registra el estado de asistencia de cada alumno.</p>
+          </div>
+
+          <span class="student-count">
+            {{ totalEstudiantes }} estudiantes
+          </span>
+
+        </div>
+
+        <div class="table-responsive">
+
+          <table>
+
+            <thead>
+              <tr>
+                <th>Estudiante</th>
+                <th>Estado</th>
+                <th>Hora de llegada</th>
+                <th>Observación</th>
+                <th>Acción</th>
+              </tr>
+            </thead>
+
+            <tbody>
+
+              @for (estudiante of estudiantes; track estudiante.estudianteId) {
+
+                <tr>
+
+                  <td>
+                    <div class="student-info">
+
+                      <div class="student-avatar">
+                        {{ estudiante.nombre.charAt(0).toUpperCase() }}
+                      </div>
+
+                      <strong>{{ estudiante.nombre }}</strong>
+
+                    </div>
+                  </td>
+
+                  <td>
+
+                    <select
+                      class="status-select"
+                      [(ngModel)]="estudiante.estado"
+                      [name]="'estado-' + estudiante.estudianteId"
+                      (ngModelChange)="cambiarEstado(estudiante)"
+                    >
+
+                      <option value="">Seleccionar</option>
+                      <option value="PRESENTE">Presente</option>
+                      <option value="TARDANZA">Tardanza</option>
+                      <option value="AUSENTE">Ausente</option>
+
+                    </select>
+
+                  </td>
+
+                  <td>
+
+                    <input
+                      class="time-input"
+                      type="time"
+                      [(ngModel)]="estudiante.horaLlegada"
+                      [disabled]="estudiante.estado === 'AUSENTE'"
+                      [name]="'hora-' + estudiante.estudianteId"
+                    />
+
+                  </td>
+
+                  <td>
+
+                    <input
+                      class="observation-input"
+                      type="text"
+                      placeholder="Observación..."
+                      [(ngModel)]="estudiante.observacion"
+                      [name]="'observacion-' + estudiante.estudianteId"
+                    />
+
+                  </td>
+
+                  <td>
+
+                    <button
+                      type="button"
+                      class="btn-save"
+                      [disabled]="estudiante.guardando || guardandoTodas"
+                      (click)="guardarAsistencia(estudiante)"
+                    >
+                      {{ estudiante.guardando ? 'Guardando...' :
+                        estudiante.asistenciaId ? 'Actualizar' : 'Guardar' }}
+                    </button>
+
+                  </td>
+
+                </tr>
+
+              }
+
+            </tbody>
+
+          </table>
+
+        </div>
+
+        <footer class="bulk-footer">
+
+          <div>
+            <strong>Guardar todas las asistencias</strong>
+            <p>Se registrarán o actualizarán los datos de todos los estudiantes.</p>
+          </div>
+
+          <button
+            type="button"
+            class="btn-primary"
+            (click)="guardarTodas()"
+            [disabled]="guardandoTodas || estudiantes.some(e => e.guardando)"
+          >
+            {{ guardandoTodas ? 'Guardando...' : 'Guardar todas' }}
+          </button>
+
+        </footer>
+
+      </section>
+
+    } @else if (cargandoEstudiantes) {
+
+      <div class="empty-state">
+        Cargando estudiantes del grupo...
+      </div>
+
+    } @else {
+
+      <div class="empty-state">
+
+        <div class="empty-icon">✓</div>
+
+        <h3>Registro de asistencia</h3>
+
+        <p>
+          Selecciona la fecha, el grupo y carga sus estudiantes
+          para comenzar a registrar la asistencia.
+        </p>
+
+      </div>
+
+    }
+
+  }
+
+  <!-- ===================================== -->
+  <!-- CONSULTAR HISTORIAL -->
+  <!-- ===================================== -->
+
+  @if (apartado === 'consulta') {
+
+    <section class="filter-card">
+
+      <div class="filter-heading">
+        <div>
+          <span class="section-kicker">HISTORIAL</span>
+          <h2>Consultar asistencias</h2>
+          <p>Busca registros anteriores por fecha, grupo o ambos.</p>
+        </div>
+      </div>
+
+      <div class="filter-grid">
+
+        <div class="form-group">
+          <label for="fechaConsulta">Fecha</label>
+
+          <input
+            id="fechaConsulta"
+            type="date"
+            [(ngModel)]="fechaConsulta"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="grupoConsulta">Grupo</label>
+
+          <select
+            id="grupoConsulta"
+            [(ngModel)]="grupoConsulta"
+          >
+
+            <option [ngValue]="null">Todos los grupos</option>
+
+            @for (grupo of grupos; track grupo.id) {
+              <option [ngValue]="grupo.id">
+                {{ grupo.nombre }}
+              </option>
+            }
+
+          </select>
+        </div>
+
+        <button
+          type="button"
+          class="btn-primary"
+          (click)="consultarHistorial()"
+          [disabled]="cargandoConsulta"
+        >
+          {{ cargandoConsulta ? 'Consultando...' : 'Buscar registros' }}
+        </button>
+
+      </div>
+
+    </section>
+
+    @if (errorConsulta) {
+      <div class="alert alert-error" role="alert">
+        {{ errorConsulta }}
+      </div>
+    }
+
+    @if (mensajeConsulta) {
+      <div class="alert alert-success" role="status">
+        {{ mensajeConsulta }}
+      </div>
+    }
+
+    @if (asistenciasConsultadas.length > 0) {
+
+      <section class="stats-grid">
+
+        <article class="stat-card">
+          <span class="stat-label">Registros</span>
+          <strong>{{ totalConsultados }}</strong>
+          <span class="stat-description">Asistencias encontradas</span>
+        </article>
+
+        <article class="stat-card stat-present">
+          <span class="stat-label">Presentes</span>
+          <strong>{{ presentesConsultados }}</strong>
+          <span class="stat-description">Asistencias</span>
+        </article>
+
+        <article class="stat-card stat-late">
+          <span class="stat-label">Tardanzas</span>
+          <strong>{{ tardanzasConsultadas }}</strong>
+          <span class="stat-description">Llegadas tarde</span>
+        </article>
+
+        <article class="stat-card stat-absent">
+          <span class="stat-label">Ausentes</span>
+          <strong>{{ ausentesConsultados }}</strong>
+          <span class="stat-description">Inasistencias</span>
+        </article>
+
+      </section>
+
+      <section class="table-card">
+
+        <div class="table-header">
+
+          <div>
+            <h2>Resultados de consulta</h2>
+            <p>Historial de asistencia de los estudiantes.</p>
+          </div>
+
+          <span class="student-count">
+            {{ totalConsultados }} registros
+          </span>
+
+        </div>
+
+        <div class="table-responsive">
+
+          <table>
+
+            <thead>
+              <tr>
+                <th>Estudiante</th>
+                <th>Grupo</th>
+                <th>Fecha</th>
+                <th>Hora</th>
+                <th>Estado</th>
+                <th>Observación</th>
+              </tr>
+            </thead>
+
+            <tbody>
+
+              @for (asistencia of asistenciasConsultadas; track asistencia.id) {
+
+                <tr>
+
+                  <td>
+                    <div class="student-info">
+                      <div class="student-avatar">
+                        {{ asistencia.estudianteNombre.charAt(0).toUpperCase() }}
+                      </div>
+
+                      <strong>{{ asistencia.estudianteNombre }}</strong>
+                    </div>
+                  </td>
+
+                  <td>{{ asistencia.grupoNombre }}</td>
+
+                  <td>{{ asistencia.fecha }}</td>
+
+                  <td>{{ asistencia.horaLlegada?.substring(0, 5) || '—' }}</td>
+
+                  <td>
+
+                    <span
+                      class="status-badge"
+                      [class.badge-present]="asistencia.estado === 'PRESENTE'"
+                      [class.badge-late]="asistencia.estado === 'TARDANZA'"
+                      [class.badge-absent]="asistencia.estado === 'AUSENTE'"
+                    >
+                      {{ obtenerNombreEstado(asistencia.estado) }}
+                    </span>
+
+                  </td>
+
+                  <td>{{ asistencia.observacion || '—' }}</td>
+
+                </tr>
+
+              }
+
+            </tbody>
+
+          </table>
+
+        </div>
+
+      </section>
+
+    } @else if (!cargandoConsulta && !mensajeConsulta) {
+
+      <div class="empty-state">
+
+        <div class="empty-icon">⌕</div>
+
+        <h3>Consulta el historial</h3>
+
+        <p>
+          Selecciona los filtros y pulsa buscar registros
+          para visualizar las asistencias anteriores.
+        </p>
+
+      </div>
+
+    }
+
+    @if (cargandoConsulta) {
+      <div class="empty-state">
+        Consultando historial de asistencias...
+      </div>
+    }
+
+  }
+
+</section>

@@ -1,4 +1,4 @@
-﻿export interface AsistenciaResponse {
+export interface AsistenciaResponse {
   id: number;
   estudianteId: number;
   estudianteNombre: string;
